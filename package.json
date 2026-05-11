@@ -9,11 +9,14 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@heroui/react": "^3.0.4",
+    "@heroui/styles": "^3.0.4",
     "next": "16.2.6",
     "react": "19.2.4",
     "react-dom": "19.2.4"
   },
   "devDependencies": {
+    "@gravity-ui/icons": "^2.18.0",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
