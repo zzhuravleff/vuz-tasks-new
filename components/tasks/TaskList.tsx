@@ -2,7 +2,7 @@
 
 "use client";
 
-import { memo, useMemo } from "react";
+import { memo } from "react";
 import { ComputedTask } from "@/types";
 import { TaskCard } from "@/components/tasks/TaskCard";
 import { TaskSkeleton } from "@/components/tasks/TaskSkeleton";
@@ -45,7 +45,7 @@ export const TaskList = memo(({
   }
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-2 w-full">
       {tasks.map((task) => (
         <TaskCard
           key={task.id}

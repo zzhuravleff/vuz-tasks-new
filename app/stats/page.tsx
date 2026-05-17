@@ -12,7 +12,7 @@ import { ComputedTask } from "@/types";
 
 // ─── Типы ──────────────────────────────────────────────────────────────────
 
-type ArchiveTab = "completed" | "overdue" | "cancelled";
+type ArchiveTab = "completed" | "overdue";
 
 // ─── Карточка цифры ────────────────────────────────────────────────────────
 
@@ -127,7 +127,6 @@ interface ArchiveTabsProps {
 const ARCHIVE_TABS: { key: ArchiveTab; label: string; color: string }[] = [
   { key: "completed", label: "Выполнены", color: "text-green-600" },
   { key: "overdue",   label: "Просрочены", color: "text-red-500" },
-  { key: "cancelled", label: "Отменены",  color: "text-gray-400" },
 ];
 
 const ArchiveTabs = memo(({ active, onChange, counts }: ArchiveTabsProps) => (
@@ -170,12 +169,11 @@ export default function StatsPage() {
     const total     = tasks.length;
     const completed = tasks.filter((t) => t.computedStatus === "completed").length;
     const overdue   = tasks.filter((t) => t.computedStatus === "overdue").length;
-    const cancelled = tasks.filter((t) => t.computedStatus === "cancelled").length;
     const active    = tasks.filter((t) => t.computedStatus === "active").length;
-    const done      = completed + cancelled;
+    const done      = completed;
     const rate      = total === 0 ? 0 : Math.round((completed / total) * 100);
 
-    return { total, completed, overdue, cancelled, active, done, rate };
+    return { total, completed, overdue, active, done, rate };
   }, [tasks]);
 
   // ── Прогресс семестра ──────────────────────────────────────────────────
@@ -223,7 +221,6 @@ export default function StatsPage() {
   const archiveCounts = useMemo(() => ({
     completed: tasks.filter((t) => t.computedStatus === "completed").length,
     overdue:   tasks.filter((t) => t.computedStatus === "overdue").length,
-    cancelled: tasks.filter((t) => t.computedStatus === "cancelled").length,
   }), [tasks]);
 
   return (

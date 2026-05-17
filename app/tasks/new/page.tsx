@@ -152,7 +152,6 @@ const ScheduleForm = ({ onSubmit, isSubmitting }: ScheduleFormProps) => {
   const { data, isLoading } = useAsyncStore();
   const [selectedSubjectId, setSelectedSubjectId] = useState<string>("");
   const [selectedSlot, setSelectedSlot] = useState<LessonSlot | null>(null);
-  const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
 
   // Пары выбранного предмета (ближайшие 60 дней)
@@ -182,16 +181,13 @@ const ScheduleForm = ({ onSubmit, isSubmitting }: ScheduleFormProps) => {
     setSelectedSlot(null);
   }, []);
 
-  const isValid =
-    title.trim().length > 0 &&
-    selectedSlot !== null;
+  const isValid = selectedSlot !== null;
 
   const handleSubmit = useCallback(() => {
     if (!isValid || !selectedSlot) return;
     onSubmit({
       id: generateId(),
       type: "По расписанию",
-      title: title.trim(),
       description: description.trim() || undefined,
       subjectId: selectedSlot.subjectId,
       ruleId: selectedSlot.ruleId,
@@ -200,7 +196,7 @@ const ScheduleForm = ({ onSubmit, isSubmitting }: ScheduleFormProps) => {
       status: "active",
       createdAt: new Date().toISOString(),
     });
-  }, [isValid, selectedSlot, title, description, onSubmit]);
+  }, [isValid, selectedSlot, description, onSubmit]);
 
   if (isLoading) return <TaskSkeleton count={2} />;
 
@@ -217,16 +213,6 @@ const ScheduleForm = ({ onSubmit, isSubmitting }: ScheduleFormProps) => {
 
   return (
     <div className="flex flex-col gap-4">
-      <Field label="Название">
-        <input
-          type="text"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="Что нужно сделать?"
-          className={inputClass}
-          autoFocus
-        />
-      </Field>
 
       <Field label="Описание">
         <textarea

@@ -149,16 +149,6 @@ class AsyncStore {
     });
   }
 
-  async cancelTask(id: string): Promise<void> {
-    const data = await this.load();
-    await this.save({
-      ...data,
-      tasks: data.tasks.map((t) =>
-        t.id === id ? { ...t, status: "cancelled" } : t
-      ),
-    });
-  }
-
   async deleteTask(id: string): Promise<void> {
     const data = await this.load();
     await this.save({

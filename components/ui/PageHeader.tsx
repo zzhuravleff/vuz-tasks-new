@@ -21,9 +21,9 @@ export const PageHeader = memo(({
   const weekInfo = useWeekInfo();
 
   return (
-    <div className="flex items-start justify-between gap-3 px-4 pt-6 pb-2">
+    <div className="flex items-start justify-between gap-3 text-center pt-3">
       <div className="flex flex-col gap-0.5">
-        <h1 className="text-3xl font-medium text-gray-900 tracking-tight">
+        <h1 className="font-medium text-2xl">
           {title}
         </h1>
 

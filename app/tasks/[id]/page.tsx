@@ -9,8 +9,8 @@ import { useAsyncStore } from "@/hooks/useAsyncStore";
 import { asyncStore } from "@/lib/asyncStore";
 import { formatDeadline, formatDateDisplay } from "@/lib/scheduleUtils";
 import { TaskSkeleton } from "@/components/tasks/TaskSkeleton";
-import { StatusBadge } from "@/components/tasks/TaskCard";
 import { LESSON_TIMES } from "@/types";
+import { Chip } from "@heroui/react";
 
 // ─── Кнопка действия ───────────────────────────────────────────────────────
 
@@ -176,12 +176,6 @@ export default function TaskDetailPage() {
     startTransition(() => router.back());
   }, [id, saveIfDirty, router]);
 
-  const handleCancel = useCallback(async () => {
-    await saveIfDirty();
-    await asyncStore.cancelTask(id);
-    startTransition(() => router.back());
-  }, [id, saveIfDirty, router]);
-
   const handleDelete = useCallback(async () => {
     await asyncStore.deleteTask(id);
     startTransition(() => router.back());
@@ -200,7 +194,7 @@ export default function TaskDetailPage() {
     return `${task.lessonNumber} пара · ${time.start} – ${time.end}`;
   }, [task]);
 
-  const isInactive = task?.computedStatus === "completed" || task?.computedStatus === "cancelled";
+  const isInactive = task?.computedStatus === "completed";
 
   if (isLoading) {
     return (
@@ -268,16 +262,34 @@ export default function TaskDetailPage() {
             <span className="text-[12px] text-gray-400 font-medium">
               {task.type === "По расписанию" ? "По расписанию" : "Кастомная задача"}
             </span>
-            <StatusBadge status={task.computedStatus} />
+            <Chip
+              color={
+                task.computedStatus === "overdue" ? "danger" :
+                task.computedStatus === "completed" ? "success" :
+                "default"
+              }
+              variant="tertiary"
+              size="sm"
+            >
+              {task.computedStatus === "overdue" ? "Просрочена" :
+              task.computedStatus === "completed" ? "Выполнена" :
+              "Активна"}
+            </Chip>
           </div>
 
-          {/* Заголовок — редактируемый */}
-          <EditableField
-            value={title}
-            onChange={handleTitleChange}
-            placeholder="Название задачи"
-            disabled={isInactive}
-          />
+          {/* Заголовок — не редактируемый для ScheduleTask */}
+          {task.type === "По расписанию" ? (
+            <p className="text-[20px] font-semibold text-gray-900 leading-snug">
+              {subjectName}
+            </p>
+          ) : (
+            <EditableField
+              value={title}
+              onChange={handleTitleChange}
+              placeholder="Название задачи"
+              disabled={isInactive}
+            />
+          )}
 
           {/* Разделитель */}
           <div className="border-t border-gray-50" />
@@ -355,17 +367,6 @@ export default function TaskDetailPage() {
               icon={
                 <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
                   <path d="M3.5 9L7.5 13L14.5 5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              }
-            />
-            <ActionButton
-              label="Отменить"
-              onClick={handleCancel}
-              variant="ghost"
-              disabled={isPending}
-              icon={
-                <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                  <path d="M5 5L13 13M13 5L5 13" stroke="#4B5563" strokeWidth="2" strokeLinecap="round" />
                 </svg>
               }
             />

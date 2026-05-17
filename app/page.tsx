@@ -29,19 +29,14 @@ export default function HomePage() {
   );
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50">
-      <PageHeader
-        title="Задачи"
-        showWeekInfo
-      />
-
-      <main className="flex-1 px-4 pb-28 pt-2">
+    <div className="flex flex-col items-center gap-3 min-h-screen">
+      <main className="flex-1 w-full">
         <TaskList
           tasks={activeTasks}
           isLoading={isLoading}
           subjectMap={subjectMap}
-          emptyTitle="Так держать!"
-          emptyDescription="Нет активных задач"
+          emptyTitle="Нет активных задач"
+          emptyDescription="Добавьте первую задачу"
         />
       </main>
     </div>

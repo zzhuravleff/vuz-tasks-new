@@ -165,8 +165,8 @@ export function getUpcomingLessonSlots(
  */
 export function computeTaskStatus(
   task: Task
-): "active" | "completed" | "overdue" | "cancelled" {
-  if (task.status === "completed" || task.status === "cancelled") {
+): "active" | "completed" | "overdue" {
+  if (task.status === "completed") {
     return task.status;
   }
 
@@ -197,7 +197,7 @@ export function computeTask(task: Task): ComputedTask {
 
 /**
  * Обогащает массив задач и сортирует: сначала active/overdue по дедлайну,
- * потом completed/cancelled.
+ * потом completed.
  */
 export function computeAndSortTasks(tasks: Task[]): ComputedTask[] {
   const computed = tasks.map(computeTask);
@@ -207,7 +207,7 @@ export function computeAndSortTasks(tasks: Task[]): ComputedTask[] {
     .sort((a, b) => a.deadline.localeCompare(b.deadline));
 
   const done = computed
-    .filter((t) => t.computedStatus === "completed" || t.computedStatus === "cancelled")
+    .filter((t) => t.computedStatus === "completed")
     .sort((a, b) => b.deadline.localeCompare(a.deadline));
 
   return [...active, ...done];

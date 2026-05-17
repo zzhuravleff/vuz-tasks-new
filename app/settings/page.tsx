@@ -257,7 +257,7 @@ export default function SettingsPage() {
             label="ВУЗадачи - Трекер задач для студента"
             sub="Отслеживайте свои учебные задачи эффективно"
             right={
-              <span className="text-[12px] text-gray-300 font-medium">v1.0</span>
+              <span className="text-[12px] text-gray-300 font-medium">v1.1</span>
             }
           />
         </Section>

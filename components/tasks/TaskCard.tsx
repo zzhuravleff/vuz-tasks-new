@@ -5,96 +5,9 @@
 import { memo, useCallback, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { ComputedTask, TaskStatus } from "@/types";
-import { formatDeadline } from "@/lib/scheduleUtils";
+import { formatDateDisplay, formatDeadline, formatTimeDisplay } from "@/lib/scheduleUtils";
 import { asyncStore } from "@/lib/asyncStore";
-
-// ─── Конфиг статусов ───────────────────────────────────────────────────────
-
-const STATUS_CONFIG = {
-  active: {
-    label: "Активна",
-    color: "text-blue-600",
-    bg: "bg-blue-50",
-    icon: (
-      <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-        <circle cx="6" cy="6" r="5" stroke="#2563EB" strokeWidth="1.5" />
-        <circle cx="6" cy="6" r="2" fill="#2563EB" />
-      </svg>
-    ),
-  },
-  overdue: {
-    label: "Просрочена",
-    color: "text-red-600",
-    bg: "bg-red-50",
-    icon: (
-      <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-        <circle cx="6" cy="6" r="5" stroke="#DC2626" strokeWidth="1.5" />
-        <path d="M6 3.5V6.5" stroke="#DC2626" strokeWidth="1.5" strokeLinecap="round" />
-        <circle cx="6" cy="8.5" r="0.75" fill="#DC2626" />
-      </svg>
-    ),
-  },
-  completed: {
-    label: "Выполнена",
-    color: "text-green-600",
-    bg: "bg-green-50",
-    icon: (
-      <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-        <circle cx="6" cy="6" r="5" stroke="#16A34A" strokeWidth="1.5" />
-        <path d="M3.5 6L5.5 8L8.5 4" stroke="#16A34A" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-    ),
-  },
-  cancelled: {
-    label: "Отменена",
-    color: "text-gray-400",
-    bg: "bg-gray-100",
-    icon: (
-      <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-        <circle cx="6" cy="6" r="5" stroke="#9CA3AF" strokeWidth="1.5" />
-        <path d="M4 4L8 8M8 4L4 8" stroke="#9CA3AF" strokeWidth="1.5" strokeLinecap="round" />
-      </svg>
-    ),
-  },
-} satisfies Record<TaskStatus, { label: string; color: string; bg: string; icon: React.ReactNode }>;
-
-// ─── Бедж статуса ──────────────────────────────────────────────────────────
-
-export const StatusBadge = memo(({ status }: { status: TaskStatus }) => {
-  const config = STATUS_CONFIG[status];
-  return (
-    <span className={`
-      inline-flex items-center gap-1 px-2 py-0.5
-      rounded-full text-[11px] font-semibold
-      ${config.bg} ${config.color}
-    `}>
-      {config.icon}
-      {config.label}
-    </span>
-  );
-});
-StatusBadge.displayName = "StatusBadge";
-
-// ─── Иконка типа задачи ────────────────────────────────────────────────────
-
-const TaskTypeIcon = memo(({ type }: { type: ComputedTask["type"] }) => {
-  if (type === "По расписанию") {
-    return (
-      <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-        <rect x="1.5" y="2.5" width="10" height="9" rx="1.75" stroke="#9CA3AF" strokeWidth="1.25" />
-        <path d="M4.5 1.5V3.5M8.5 1.5V3.5" stroke="#9CA3AF" strokeWidth="1.25" strokeLinecap="round" />
-        <path d="M1.5 5.5H11.5" stroke="#9CA3AF" strokeWidth="1.25" />
-      </svg>
-    );
-  }
-  return (
-    <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-      <rect x="2" y="2" width="9" height="9" rx="1.75" stroke="#9CA3AF" strokeWidth="1.25" />
-      <path d="M4.5 6.5L6 8L8.5 5" stroke="#9CA3AF" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-});
-TaskTypeIcon.displayName = "TaskTypeIcon";
+import { Chip } from "@heroui/react";
 
 // ─── Свайп-обёртка ─────────────────────────────────────────────────────────
 
@@ -227,6 +140,11 @@ export const TaskCard = memo(({ task, subjectName }: TaskCardProps) => {
     setTimeout(() => asyncStore.deleteTask(task.id), 300);
   }, [task.id]);
 
+  const isSoon = task.computedStatus === "active" && (() => {
+    const diff = new Date(task.deadline).getTime() - Date.now();
+    return diff < 48 * 60 * 60 * 1000;
+  })();
+
   if (isDeleted) {
     return (
       <div
@@ -237,8 +155,7 @@ export const TaskCard = memo(({ task, subjectName }: TaskCardProps) => {
   }
 
   const isInactive =
-    task.computedStatus === "completed" ||
-    task.computedStatus === "cancelled";
+    task.computedStatus === "completed"
 
   return (
     <SwipeWrapper
@@ -251,58 +168,46 @@ export const TaskCard = memo(({ task, subjectName }: TaskCardProps) => {
         tabIndex={0}
         onClick={handleTap}
         onKeyDown={(e) => e.key === "Enter" && handleTap()}
-        className="w-full rounded-3xl bg-white p-4 cursor-pointer active:scale-[0.98] transition-transform"
+        className={`w-full rounded-3xl bg-white p-3 cursor-pointer active:scale-[0.98] transition-transform ${task.computedStatus === "overdue" ? "border-danger/16 border-2" : ""}`}
       >
-        <div className="flex flex-col gap-2.5">
+        <div className="flex flex-col gap-2">
 
-          {/* Верхняя строка: тип + статус */}
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-1.5 text-gray-400">
-              <TaskTypeIcon type={task.type} />
-              <span className="text-[11px] font-medium">
-                {task.type === "По расписанию" && subjectName
-                  ? subjectName
-                  : "Задача"}
-              </span>
+          {isSoon && (
+            <div className="p-0 m-0">
+              <Chip color="danger" variant="soft" size="lg">Скоро</Chip>
             </div>
-            <StatusBadge status={task.computedStatus} />
-          </div>
-
-          {/* Заголовок */}
-          <p className={`
-            text-[15px] font-semibold text-gray-900 leading-snug line-clamp-2
-            ${isInactive ? "line-through text-gray-400" : ""}
-          `}>
-            {task.title}
-          </p>
-
-          {/* Описание */}
-          {task.description && (
-            <p className="text-[13px] text-gray-400 leading-snug line-clamp-2">
-              {task.description}
-            </p>
           )}
 
-          {/* Дедлайн */}
-          <div className="flex items-center gap-1.5 pt-0.5 border-t border-gray-50">
-            <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-              <circle cx="6.5" cy="6.5" r="5.25" stroke="#D1D5DB" strokeWidth="1.25" />
-              <path
-                d="M6.5 4V6.5L8.5 8"
-                stroke="#D1D5DB"
-                strokeWidth="1.25"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-            <span className={`text-[12px] font-medium ${
-              task.computedStatus === "overdue"
-                ? "text-red-400"
-                : "text-gray-400"
-            }`}>
-              {formatDeadline(task.deadline)}
+          <div className="flex justify-between">
+            <span className="font-medium text-xl line-clamp-2 leading-6">
+              {task.type === "По расписанию"
+              ? (subjectName ?? "Предмет")
+              : task.title}
             </span>
           </div>
+
+          {task.description && (
+            <div className="text-base font-regular text-gray-700 whitespace-pre-line line-clamp-2">
+              {task.description}
+            </div>
+          )}
+
+          {task.computedStatus !== "overdue" ? (
+            <div className="flex justify-between">
+              <div className="flex gap-1 flex-wrap">
+                <Chip variant="soft" color="default" size="lg">{formatDeadline(task.deadline)}</Chip>
+              </div>
+              <Chip color={task.type === "По расписанию" ? "accent" : "warning"} size="lg" variant="soft">
+                {task.type}
+              </Chip>
+            </div>
+          ) : (
+            <div className="flex justify-end">
+              <Chip color="danger" size="lg" variant="soft">
+                Просрочено
+              </Chip>
+            </div>
+          )}
 
         </div>
       </div>

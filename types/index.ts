@@ -53,19 +53,19 @@ export const LESSON_TIMES: Record<number, LessonTime> = {
 
 // ─── Задачи ────────────────────────────────────────────────────────────────
 
-export type TaskStatus = "active" | "completed" | "overdue" | "cancelled";
+export type TaskStatus = "active" | "completed" | "overdue";
 export type TaskType = "Кастомная" | "По расписанию";
 
 interface BaseTask {
   id: string;
-  title: string;
   description?: string;
-  status: "active" | "completed" | "cancelled"; // overdue вычисляется, не хранится
+  status: "active" | "completed"; // overdue вычисляется, не хранится
   createdAt: string; // ISO datetime
 }
 
 export interface CustomTask extends BaseTask {
   type: "Кастомная";
+  title: string;
   deadline: string; // ISO datetime
 }
 

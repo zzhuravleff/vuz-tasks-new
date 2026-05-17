@@ -42,7 +42,7 @@ export default function RootLayout({
         <meta name="mobile-web-app-capable" content="yes" />
       </head>
       <body className="bg-gray-50 antialiased">
-        {children}
+        <main className="w-full p-4 pb-28">{children}</main>
         <BottomNav />
         <ServiceWorkerRegistrar />
       </body>
