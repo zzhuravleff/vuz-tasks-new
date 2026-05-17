@@ -8,6 +8,7 @@ import { ComputedTask, TaskStatus } from "@/types";
 import { formatDateDisplay, formatDeadline, formatTimeDisplay } from "@/lib/scheduleUtils";
 import { asyncStore } from "@/lib/asyncStore";
 import { Chip } from "@heroui/react";
+import { Check, Xmark } from "@gravity-ui/icons";
 
 // ─── Свайп-обёртка ─────────────────────────────────────────────────────────
 
@@ -71,26 +72,22 @@ const SwipeWrapper = memo(({
     <div className="relative overflow-hidden rounded-3xl">
       {/* Фон свайпа вправо — выполнить */}
       <div className={`
-        absolute inset-0 rounded-3xl bg-green-500
+        absolute inset-0 rounded-3xl bg-success
         flex items-center px-5
         transition-opacity duration-150
         ${offset > 20 ? "opacity-100" : "opacity-0"}
       `}>
-        <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-          <path d="M4 11L9 16L18 6" stroke="white" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
+        <Check className="size-8 text-white" />
       </div>
 
       {/* Фон свайпа влево — удалить */}
       <div className={`
-        absolute inset-0 rounded-3xl bg-red-500
+        absolute inset-0 rounded-3xl bg-danger
         flex items-center justify-end px-5
         transition-opacity duration-150
         ${offset < -20 ? "opacity-100" : "opacity-0"}
       `}>
-        <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-          <path d="M6 6L16 16M16 6L6 16" stroke="white" strokeWidth="2.25" strokeLinecap="round" />
-        </svg>
+        <Xmark className="size-8 text-white" />
       </div>
 
       {/* Карточка */}

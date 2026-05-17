@@ -31,14 +31,14 @@ export const EmptyState = memo(({
     </div>
 
     <div className="flex flex-col gap-1">
-      <p className="text-gray-900 font-semibold text-base">{title}</p>
+      <p className="text-black font-semibold text-base">{title}</p>
       <p className="text-gray-400 text-sm leading-snug">{description}</p>
     </div>
 
     {action && (
       <button
         onClick={action.onClick}
-        className="mt-1 px-6 py-2.5 bg-gray-900 text-white text-sm font-medium rounded-2xl active:scale-95 transition-transform"
+        className="mt-1 px-6 py-2.5 bg-black text-white text-sm font-medium rounded-2xl active:scale-95 transition-transform"
       >
         {action.label}
       </button>

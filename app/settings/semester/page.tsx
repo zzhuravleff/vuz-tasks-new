@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { useAsyncStore } from "@/hooks/useAsyncStore";
 import { asyncStore } from "@/lib/asyncStore";
 import { formatDateToISO } from "@/lib/scheduleUtils";
+import { Button, Chip, IconChevronLeft } from "@heroui/react";
 
 // ─── Константы ─────────────────────────────────────────────────────────────
 
@@ -35,7 +36,7 @@ const Field = ({ label, sub, children }: FieldProps) => (
 
 const inputClass = `
   w-full bg-white rounded-2xl px-4 py-3.5
-  text-[15px] text-gray-900 font-medium
+  text-[15px] text-black font-medium
   outline-none border-2 border-transparent
   focus:border-gray-200 transition-colors
 `;
@@ -56,7 +57,7 @@ const Stepper = ({ value, min, max, onChange }: StepperProps) => (
       disabled={value <= min}
       className="
         w-14 h-14 flex items-center justify-center
-        text-gray-900 text-xl font-medium
+        text-black text-xl font-medium
         active:bg-gray-50 transition-colors
         disabled:opacity-30 disabled:pointer-events-none
       "
@@ -65,7 +66,7 @@ const Stepper = ({ value, min, max, onChange }: StepperProps) => (
     </button>
 
     <div className="flex-1 flex flex-col items-center py-2">
-      <span className="text-[26px] font-bold text-gray-900 leading-none">
+      <span className="text-[26px] font-bold text-black leading-none">
         {value}
       </span>
       <span className="text-[12px] text-gray-400 font-medium mt-0.5">
@@ -78,7 +79,7 @@ const Stepper = ({ value, min, max, onChange }: StepperProps) => (
       disabled={value >= max}
       className="
         w-14 h-14 flex items-center justify-center
-        text-gray-900 text-xl font-medium
+        text-black text-xl font-medium
         active:bg-gray-50 transition-colors
         disabled:opacity-30 disabled:pointer-events-none
       "
@@ -122,20 +123,15 @@ const SemesterPreview = ({ startDate, weeks }: SemesterPreviewProps) => {
         <span className="text-[12px] font-semibold text-gray-400 uppercase tracking-wide">
           Период
         </span>
-        <span className={`
-          text-[11px] font-semibold px-2 py-0.5 rounded-full
-          ${isActive ? "bg-green-50 text-green-600" :
-            isPast   ? "bg-gray-100 text-gray-400" :
-                       "bg-blue-50 text-blue-600"}
-        `}>
+        <Chip color={isActive ? "success" : isPast ? "default" : "accent"} variant="soft">
           {isActive ? "Идёт сейчас" : isPast ? "Завершён" : "Предстоит"}
-        </span>
+        </Chip>
       </div>
 
       <div className="flex items-center gap-2">
         <div className="flex flex-col flex-1">
           <span className="text-[11px] text-gray-400">Начало</span>
-          <span className="text-[14px] font-semibold text-gray-900">
+          <span className="text-[14px] font-semibold text-black">
             {formatShort(start)}
           </span>
         </div>
@@ -147,7 +143,7 @@ const SemesterPreview = ({ startDate, weeks }: SemesterPreviewProps) => {
 
         <div className="flex flex-col flex-1 items-end">
           <span className="text-[11px] text-gray-400">Конец</span>
-          <span className="text-[14px] font-semibold text-gray-900">
+          <span className="text-[14px] font-semibold text-black">
             {formatShort(endDate)}
           </span>
         </div>
@@ -205,38 +201,25 @@ export default function SemesterSettingsPage() {
   }, [router]);
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50">
+    <div className="flex flex-col min-h-screen">
 
-      {/* Шапка */}
-      <div className="flex items-center justify-between px-4 pt-6 pb-4">
-        <button
-          onClick={handleBack}
-          className="w-9 h-9 rounded-2xl bg-white flex items-center justify-center active:scale-95 transition-transform shadow-sm"
-        >
-          <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-            <path d="M11 4L6 9L11 14" stroke="#111827" strokeWidth="2"
-              strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </button>
+      <Button variant="tertiary" className="fixed" onPress={handleBack}>
+        <IconChevronLeft className="size-4" />
+        Назад
+      </Button>
 
-        <h1 className="text-[17px] font-bold text-gray-900">Семестр</h1>
+      <Button
+          onPress={handleSave}
+          className="fixed right-4"
+          variant="primary"
+          isDisabled={!isDirty || !isValid || isSaving || isPending}
+      >
+        {isSaving ? "..." : "Сохранить"}
+      </Button>
+      
+      <h1 className="text-2xl font-medium text-center mt-12">Семестр</h1>
 
-        {/* Кнопка сохранения */}
-        <button
-          onClick={handleSave}
-          disabled={!isDirty || !isValid || isSaving || isPending}
-          className="
-            px-3.5 py-1.5 rounded-xl bg-gray-900 text-white
-            text-[13px] font-semibold
-            active:scale-95 transition-all
-            disabled:opacity-30 disabled:pointer-events-none
-          "
-        >
-          {isSaving ? "..." : "Готово"}
-        </button>
-      </div>
-
-      <div className="flex-1 px-4 pb-10 flex flex-col gap-4">
+      <div className="flex flex-col gap-4">
 
         {/* Дата начала */}
         <Field
@@ -268,19 +251,6 @@ export default function SemesterSettingsPage() {
         <Field label="Итого">
           <SemesterPreview startDate={startDate} weeks={weeks} />
         </Field>
-
-        {/* Подсказка о чётности */}
-        <div className="bg-blue-50 rounded-2xl px-4 py-3 flex gap-3 items-start">
-          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" className="shrink-0 mt-0.5">
-            <circle cx="9" cy="9" r="7.5" stroke="#3B82F6" strokeWidth="1.25" />
-            <path d="M9 8V13" stroke="#3B82F6" strokeWidth="1.5" strokeLinecap="round" />
-            <circle cx="9" cy="6" r="0.75" fill="#3B82F6" />
-          </svg>
-          <p className="text-[13px] text-blue-600 leading-snug">
-            Чётность недели рассчитывается от даты начала семестра.
-            Первая неделя считается нечётной.
-          </p>
-        </div>
 
       </div>
     </div>

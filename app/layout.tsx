@@ -13,7 +13,7 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: "Практика",
-  description: "Трекер задач для студента",
+  description: "Трекер задач для студентов",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
@@ -41,8 +41,8 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/icons/icon-192.png" />
         <meta name="mobile-web-app-capable" content="yes" />
       </head>
-      <body className="bg-gray-50 antialiased">
-        <main className="w-full p-4 pb-28">{children}</main>
+      <body className="bg-[#f5f5f5] antialiased">
+        <main className="w-full p-4">{children}</main>
         <BottomNav />
         <ServiceWorkerRegistrar />
       </body>

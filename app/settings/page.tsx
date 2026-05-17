@@ -8,6 +8,7 @@ import { useAsyncStore } from "@/hooks/useAsyncStore";
 import { useWeekInfo } from "@/hooks/useSchedule";
 import { asyncStore } from "@/lib/asyncStore";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { Button, Chip } from "@heroui/react";
 
 // ─── Секция ────────────────────────────────────────────────────────────────
 
@@ -45,7 +46,7 @@ const SettingsRow = memo(({ label, sub, onClick, right, destructive }: SettingsR
     `}
   >
     <div className="flex flex-col gap-0.5 flex-1">
-      <span className={`text-[15px] font-medium ${destructive ? "text-red-500" : "text-gray-900"}`}>
+      <span className={`text-[15px] font-medium ${destructive ? "text-danger" : "text-black"}`}>
         {label}
       </span>
       {sub && <span className="text-[12px] text-gray-400">{sub}</span>}
@@ -69,27 +70,29 @@ interface ConfirmResetModalProps {
 }
 
 const ConfirmResetModal = memo(({ onConfirm, onCancel }: ConfirmResetModalProps) => (
-  <div className="fixed inset-0 z-50 flex items-end justify-center">
+  <div className="fixed inset-0 z-[60] flex items-end justify-center">
     <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onCancel} />
-    <div className="relative bg-white rounded-t-3xl w-full max-w-lg p-6 flex flex-col gap-4">
+    <div className="relative bg-white rounded-t-3xl w-full max-w-lg p-6 flex flex-col gap-2">
       <div className="flex flex-col gap-1.5 text-center">
-        <h2 className="text-[18px] font-bold text-gray-900">Сбросить данные?</h2>
+        <h2 className="text-[18px] font-bold text-black">Сбросить данные?</h2>
         <p className="text-[14px] text-gray-400 leading-snug">
           Все задачи, предметы и расписание будут удалены. Это действие нельзя отменить.
         </p>
       </div>
-      <button
+      <Button
         onClick={onConfirm}
-        className="w-full py-3.5 rounded-2xl bg-red-500 text-white text-[15px] font-semibold active:scale-[0.98] transition-transform"
+        variant="danger"
+        className="w-full"
       >
         Сбросить всё
-      </button>
-      <button
+      </Button>
+      <Button
         onClick={onCancel}
-        className="w-full py-3.5 rounded-2xl bg-gray-100 text-gray-700 text-[15px] font-semibold active:scale-[0.98] transition-transform"
+        variant="tertiary"
+        className="w-full"
       >
-        Отмена
-      </button>
+        Отменить
+      </Button>
     </div>
   </div>
 ));
@@ -167,10 +170,9 @@ export default function SettingsPage() {
   }, []);
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50">
-      <PageHeader title="Настройки" />
+    <div className="flex flex-col min-h-screen">
 
-      <main className="flex-1 px-4 pb-28 pt-2 flex flex-col gap-4">
+      <main className="flex-1 pb-24 flex flex-col gap-4">
 
         {/* ── Семестр ─────────────────────────────────────────────── */}
         <Section title="Семестр">
@@ -183,12 +185,9 @@ export default function SettingsPage() {
             <SettingsRow
               label="Текущая неделя"
               right={
-                <span className={`
-                  text-[12px] font-semibold px-2.5 py-1 rounded-full
-                  ${weekInfo.isEven ? "bg-blue-50 text-blue-600" : "bg-orange-50 text-orange-600"}
-                `}>
+                <Chip variant="soft" color={weekInfo.isEven ? "accent" : "warning"}>
                   {weekInfo.weekLabel}
-                </span>
+                </Chip>
               }
             />
           )}
@@ -239,10 +238,6 @@ export default function SettingsPage() {
               </svg>
             }
           />
-        </Section>
-
-        {/* ── Опасная зона ────────────────────────────────────────── */}
-        <Section title="Опасная зона">
           <SettingsRow
             label="Сбросить все данные"
             sub="Удалить задачи, предметы и расписание"
@@ -254,7 +249,7 @@ export default function SettingsPage() {
         {/* ── О приложении ────────────────────────────────────────── */}
         <Section title="О приложении">
           <SettingsRow
-            label="ВУЗадачи - Трекер задач для студента"
+            label="ВУЗадачи - Трекер задач для студентов"
             sub="Отслеживайте свои учебные задачи эффективно"
             right={
               <span className="text-[12px] text-gray-300 font-medium">v1.1</span>

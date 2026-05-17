@@ -38,7 +38,7 @@ const TabSwitcher = ({ active, onChange }: TabSwitcherProps) => (
           flex-1 py-2 rounded-xl text-[13px] font-semibold
           transition-all duration-200 active:scale-[0.97]
           ${active === tab
-            ? "bg-white text-gray-900 shadow-sm"
+            ? "bg-white text-black shadow-sm"
             : "text-gray-400"
           }
         `}
@@ -67,7 +67,7 @@ const Field = ({ label, children }: FieldProps) => (
 
 const inputClass = `
   w-full bg-white rounded-2xl px-4 py-3.5
-  text-[15px] text-gray-900 font-medium
+  text-[15px] text-black font-medium
   outline-none border-2 border-transparent
   focus:border-gray-200 transition-colors
   placeholder:text-gray-300
@@ -236,7 +236,7 @@ const ScheduleForm = ({ onSubmit, isSubmitting }: ScheduleFormProps) => {
                 text-[15px] font-medium transition-all duration-150
                 active:scale-[0.98]
                 ${selectedSubjectId === subject.id
-                  ? "bg-gray-900 text-white"
+                  ? "bg-black text-white"
                   : "bg-white text-gray-700"
                 }
               `}
@@ -277,7 +277,7 @@ const ScheduleForm = ({ onSubmit, isSubmitting }: ScheduleFormProps) => {
                           w-full text-left px-4 py-3 rounded-2xl
                           transition-all duration-150 active:scale-[0.98]
                           ${isSelected
-                            ? "bg-gray-900 text-white"
+                            ? "bg-black text-white"
                             : "bg-white text-gray-700"
                           }
                         `}
@@ -324,7 +324,7 @@ const SubmitButton = ({ onSubmit, disabled, isSubmitting }: SubmitButtonProps) =
     className={`
       w-full py-4 rounded-2xl
       text-[15px] font-semibold text-white
-      bg-gray-900 active:bg-gray-800
+      bg-black active:bg-gray-800
       active:scale-[0.98] transition-all duration-150
       disabled:opacity-40 disabled:pointer-events-none
       mt-2
@@ -372,7 +372,7 @@ export default function NewTaskPage() {
             <path d="M11 4L6 9L11 14" stroke="#111827" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </button>
-        <h1 className="text-[17px] font-bold text-gray-900">Новая задача</h1>
+        <h1 className="text-[17px] font-bold text-black">Новая задача</h1>
         <div className="w-9" />
       </div>
 

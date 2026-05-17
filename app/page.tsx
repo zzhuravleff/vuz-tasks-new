@@ -29,7 +29,7 @@ export default function HomePage() {
   );
 
   return (
-    <div className="flex flex-col items-center gap-3 min-h-screen">
+    <div className="flex flex-col items-center gap-3 min-h-screen mb-24">
       <main className="flex-1 w-full">
         <TaskList
           tasks={activeTasks}

@@ -39,7 +39,7 @@ const SubjectCard = memo(({ subject, onEdit, onDelete }: SubjectCardProps) => (
 
     {/* Шапка */}
     <div className="flex items-center justify-between px-4 pt-4 pb-3 border-b border-gray-50">
-      <p className="text-[15px] font-semibold text-gray-900 flex-1 leading-snug pr-2">
+      <p className="text-[15px] font-semibold text-black flex-1 leading-snug pr-2">
         {subject.name}
       </p>
       <div className="flex items-center gap-1">
@@ -158,13 +158,13 @@ export default function SubjectsPage() {
           </svg>
         </button>
 
-        <h1 className="text-[17px] font-bold text-gray-900">Предметы</h1>
+        <h1 className="text-[17px] font-bold text-black">Предметы</h1>
 
         {/* Добавить */}
         <button
           onClick={() => navigate("/settings/subjects/new")}
           disabled={isPending}
-          className="w-9 h-9 rounded-2xl bg-gray-900 flex items-center justify-center active:scale-95 transition-transform shadow-sm"
+          className="w-9 h-9 rounded-2xl bg-black flex items-center justify-center active:scale-95 transition-transform shadow-sm"
         >
           <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
             <path d="M9 4V14M4 9H14" stroke="white" strokeWidth="2" strokeLinecap="round" />
@@ -185,12 +185,12 @@ export default function SubjectsPage() {
               </svg>
             </div>
             <div className="flex flex-col items-center gap-1">
-              <p className="text-gray-900 font-semibold text-base">Нет предметов</p>
+              <p className="text-black font-semibold text-base">Нет предметов</p>
               <p className="text-gray-400 text-sm">Добавьте первый предмет</p>
             </div>
             <button
               onClick={() => navigate("/settings/subjects/new")}
-              className="px-6 py-2.5 bg-gray-900 text-white text-sm font-medium rounded-2xl active:scale-95 transition-transform"
+              className="px-6 py-2.5 bg-black text-white text-sm font-medium rounded-2xl active:scale-95 transition-transform"
             >
               Добавить предмет
             </button>

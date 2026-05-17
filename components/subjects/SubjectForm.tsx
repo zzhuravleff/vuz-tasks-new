@@ -34,7 +34,7 @@ const WEEK_TYPES = [
 
 const inputClass = `
   w-full bg-gray-50 rounded-2xl px-4 py-3.5
-  text-[15px] text-gray-900 font-medium
+  text-[15px] text-black font-medium
   outline-none border-2 border-transparent
   focus:border-gray-200 focus:bg-white transition-all
   placeholder:text-gray-300
@@ -70,7 +70,7 @@ const PillGrid = memo(({ items, selected, onToggle }: PillGridProps) => (
           className={`
             px-3.5 py-2 rounded-xl text-[13px] font-semibold
             transition-all duration-150 active:scale-95
-            ${active ? "bg-gray-900 text-white" : "bg-gray-100 text-gray-500"}
+            ${active ? "bg-black text-white" : "bg-gray-100 text-gray-500"}
           `}
         >
           {label}
@@ -197,7 +197,7 @@ const AddRuleForm = memo(({ onAdd, onCancel }: AddRuleFormProps) => {
         <button
           onClick={handleAdd}
           disabled={!isValid}
-          className="flex-1 py-3 rounded-2xl bg-gray-900 text-white text-[14px] font-semibold active:scale-[0.98] transition-transform disabled:opacity-30 disabled:pointer-events-none"
+          className="flex-1 py-3 rounded-2xl bg-black text-white text-[14px] font-semibold active:scale-[0.98] transition-transform disabled:opacity-30 disabled:pointer-events-none"
         >
           Добавить
         </button>
@@ -329,14 +329,14 @@ export function SubjectForm({ initial, mode }: SubjectFormProps) {
           </svg>
         </button>
 
-        <h1 className="text-[17px] font-bold text-gray-900">
+        <h1 className="text-[17px] font-bold text-black">
           {mode === "new" ? "Новый предмет" : "Редактировать"}
         </h1>
 
         <button
           onClick={handleSave}
           disabled={!isValid || isSaving || isPending}
-          className="px-3.5 py-1.5 rounded-xl bg-gray-900 text-white text-[13px] font-semibold active:scale-95 transition-all disabled:opacity-30 disabled:pointer-events-none"
+          className="px-3.5 py-1.5 rounded-xl bg-black text-white text-[13px] font-semibold active:scale-95 transition-all disabled:opacity-30 disabled:pointer-events-none"
         >
           {isSaving ? "..." : "Готово"}
         </button>
@@ -368,7 +368,7 @@ export function SubjectForm({ initial, mode }: SubjectFormProps) {
             {!showAddRule && (
               <button
                 onClick={() => setShowAddRule(true)}
-                className="text-[13px] font-semibold text-gray-900 active:opacity-60 transition-opacity"
+                className="text-[13px] font-semibold text-black active:opacity-60 transition-opacity"
               >
                 + Добавить
               </button>
