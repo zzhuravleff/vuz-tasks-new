@@ -224,10 +224,10 @@ export default function StatsPage() {
   }), [tasks]);
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50">
+    <div className="flex flex-col min-h-screen">
       <PageHeader title="Статистика" showWeekInfo />
 
-      <main className="flex-1 px-4 pb-28 pt-2 flex flex-col gap-3">
+      <main className="flex-1 px-4 pb-24 flex flex-col gap-3">
 
         {/* ── Цифры ─────────────────────────────────────────────────── */}
         <div className="grid grid-cols-2 gap-2">
@@ -258,6 +258,7 @@ export default function StatsPage() {
         </div>
 
         {/* ── Прогресс семестра ──────────────────────────────────────── */}
+        {/*
         {semesterProgress && (
           <div className="bg-white rounded-3xl p-4 flex flex-col gap-3">
             <span className="text-[13px] font-semibold text-gray-400 uppercase tracking-wide">
@@ -285,8 +286,10 @@ export default function StatsPage() {
             )}
           </div>
         )}
+        */}
 
         {/* ── По предметам ───────────────────────────────────────────── */}
+        {/*
         {subjectStats.length > 0 && (
           <div className="bg-white rounded-3xl px-4 py-3">
             <span className="text-[13px] font-semibold text-gray-400 uppercase tracking-wide">
@@ -305,8 +308,10 @@ export default function StatsPage() {
             </div>
           </div>
         )}
+        */}
 
         {/* ── Архив ─────────────────────────────────────────────────── */}
+        {/*
         <div className="flex flex-col gap-2">
           <span className="text-[13px] font-semibold text-gray-400 uppercase tracking-wide px-1">
             Архив
@@ -328,6 +333,7 @@ export default function StatsPage() {
             }
           />
         </div>
+        */}
 
       </main>
     </div>

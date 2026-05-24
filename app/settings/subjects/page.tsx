@@ -35,10 +35,10 @@ interface SubjectCardProps {
 }
 
 const SubjectCard = memo(({ subject, onEdit, onDelete }: SubjectCardProps) => (
-  <div className="bg-white rounded-3xl overflow-hidden">
+  <div className="rounded-3xl overflow-hidden">
 
     {/* Шапка */}
-    <div className="flex items-center justify-between px-4 pt-4 pb-3 border-b border-gray-50">
+    <div className="flex items-center justify-between px-4 pt-4 pb-3 border-b">
       <p className="text-[15px] font-semibold text-black flex-1 leading-snug pr-2">
         {subject.name}
       </p>
