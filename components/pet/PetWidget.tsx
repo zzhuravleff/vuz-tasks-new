@@ -11,12 +11,12 @@ import { Chip, InfoIcon, ProgressBar } from "@heroui/react";
 // ─── Конфиг цветов ─────────────────────────────────────────────────────────
 
 const STATE_COLORS: Record<PetState, {
-  bg: string; color: "success" | "accent" | "warning" | "danger"; border: string;
+  bg: string; color: "success" | "accent" | "warning" | "danger"; border: string; text: string;
 }> = {
-  happy:   { bg: "#F2FBEA", color: "success", border: "border-success" },
-  neutral: { bg: "#E6F1FB", color: "accent", border: "border-accent" },
-  sad:     { bg: "#FAEEDA", color: "warning", border: "border-warning" },
-  sick:    { bg: "#FCEBEB", color: "danger", border: "border-danger" },
+  happy:   { bg: "#F2FBEA", color: "success", border: "border-success", text: "text-success" },
+  neutral: { bg: "#E6F1FB", color: "accent", border: "border-accent", text: "text-accent" },
+  sad:     { bg: "#FAEEDA", color: "warning", border: "border-warning", text: "text-warning" },
+  sick:    { bg: "#FCEBEB", color: "danger", border: "border-danger", text: "text-danger" },
 };
 
 
@@ -65,11 +65,11 @@ export const PetWidget = memo(({ tasks, mini = false }: PetWidgetProps) => {
           <span className="text-base font-medium">
             Здоровье питомца
           </span>
-          <span className={`text-base font-bold text-${colors.color}`}>
+          <span className={`text-base font-bold ${colors.text}`}>
             {status.health} / 100
           </span>
         </div>
-        <ProgressBar aria-label="Progress" className="" color={colors.color} value={status.health}>
+        <ProgressBar aria-label="Progress" className="" size="lg" color={colors.color} value={status.health}>
           <ProgressBar.Track>
             <ProgressBar.Fill />
           </ProgressBar.Track>
@@ -77,8 +77,8 @@ export const PetWidget = memo(({ tasks, mini = false }: PetWidgetProps) => {
       </div>
 
       {/* Подсказка */}
-      <div className="flex gap-1">
-        <InfoIcon className={`text-${colors.color}`} />
+      <div className="flex gap-1 z-10">
+        <InfoIcon className={`${colors.text}`} />
         <p className="text-[12px] leading-snug text-gray-400">
           {status.hint}
         </p>

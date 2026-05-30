@@ -8,7 +8,7 @@ import { useTasks } from "@/hooks/useAsyncStore";
 import { useWeekInfo } from "@/hooks/useSchedule";
 import { TaskList } from "@/components/tasks/TaskList";
 import { ComputedTask } from "@/types";
-import { Chip } from "@heroui/react";
+import { Chip, Label, ProgressBar } from "@heroui/react";
 import { PetWidget } from "@/components/pet/PetWidget";
 
 // ─── Типы ──────────────────────────────────────────────────────────────────
@@ -54,29 +54,22 @@ interface ProgressBarProps {
   label: string;
   value: number;
   total: number;
-  color: string;
+  color: "accent" | "success" | "danger";
 }
 
-const ProgressBar = memo(({ label, value, total, color }: ProgressBarProps) => {
+const ProgressBarUI = memo(({ label, value, total, color }: ProgressBarProps) => {
   const pct = total === 0 ? 0 : Math.round((value / total) * 100);
   return (
-    <div className="flex flex-col gap-1.5">
-      <div className="flex items-center justify-between">
-        <span className="text-[13px] font-medium text-gray-700">{label}</span>
-        <span className="text-[13px] font-semibold text-gray-400">
-          {value} · {pct}%
-        </span>
-      </div>
-      <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-        <div
-          className={`h-full rounded-full transition-all duration-500 ${color}`}
-          style={{ width: `${pct}%` }}
-        />
-      </div>
-    </div>
+    <ProgressBar aria-label="Bar" color={color} value={pct}>
+      <Label className="text-base font-medium">{label}</Label>
+      <ProgressBar.Output className="text-base font-bold" />
+      <ProgressBar.Track>
+        <ProgressBar.Fill />
+      </ProgressBar.Track>
+    </ProgressBar>
   );
 });
-ProgressBar.displayName = "ProgressBar";
+ProgressBarUI.displayName = "ProgressBarUI";
 
 // ─── Статистика по дисплинам ───────────────────────────────────────────────
 
@@ -87,32 +80,16 @@ interface SubjectStatRowProps {
   overdue: number;
 }
 
-const SubjectStatRow = memo(({ name, total, completed, overdue }: SubjectStatRowProps) => {
+const SubjectStatRow = memo(({ name, total, completed }: SubjectStatRowProps) => {
   const pct = total === 0 ? 0 : Math.round((completed / total) * 100);
   return (
-    <div className="flex flex-col gap-1.5 py-3 border-b border-gray-50 last:border-0">
-      <div className="flex items-center justify-between gap-2">
-        <span className="text-[14px] font-medium text-gray-800 line-clamp-1 flex-1">
-          {name}
-        </span>
-        <div className="flex items-center gap-2 shrink-0">
-          {overdue > 0 && (
-            <span className="text-[11px] font-semibold text-red-500 bg-red-50 px-2 py-0.5 rounded-full">
-              {overdue} просроч.
-            </span>
-          )}
-          <span className="text-[12px] font-semibold text-gray-400">
-            {completed}/{total}
-          </span>
-        </div>
-      </div>
-      <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
-        <div
-          className="h-full bg-gray-800 rounded-full transition-all duration-500"
-          style={{ width: `${pct}%` }}
-        />
-      </div>
-    </div>
+    <ProgressBar aria-label="Bar" color="default" value={pct}>
+      <Label className="text-base font-medium">{name}</Label>
+      <ProgressBar.Output className="text-base font-bold">{`${completed}/${total}`}</ProgressBar.Output>
+      <ProgressBar.Track>
+        <ProgressBar.Fill />
+      </ProgressBar.Track>
+    </ProgressBar>
   );
 });
 SubjectStatRow.displayName = "SubjectStatRow";
@@ -226,103 +203,76 @@ export default function StatsPage() {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <main className="flex-1 pb-24 flex flex-col gap-3">
-
-        {/* {weekInfo && (
-          <div className="flex justify-center select-none">
-            <Chip variant="soft" color={weekInfo.isEven ? "accent" : "warning"}>
-              {weekInfo.weekLabel}
-            </Chip>
-          </div>
-        )} */}
+      <main className="flex-1 pb-24 flex flex-col gap-4">
 
         <PetWidget tasks={tasks} />
 
         {/* ── Цифры ─────────────────────────────────────────────────── */}
         <div className="grid grid-cols-2 gap-2">
-          <StatCard
-            label="Выполнено"
-            value={stats.completed}
-            sub={`из ${stats.total} задач`}
-            accent="green"
-          />
-          <StatCard
-            label="Процент выполнения"
-            value={`${stats.rate}%`}
-            sub="за семестр"
-            accent="blue"
-          />
+          {semesterProgress && (
+              <StatCard
+                label="Неделя"
+                value={`${semesterProgress.current}/${semesterProgress.total}`}
+                sub={`${weekInfo?.isEven ? "(чётная)" : "(нечётная)"}`}
+                accent="blue"
+              />
+          )}
           <StatCard
             label="Активных"
-            value={stats.active}
+            value={`${stats.active}`}
             sub="сейчас в работе"
             accent="gray"
-          />
-          <StatCard
-            label="Просрочено"
-            value={stats.overdue}
-            sub="требуют внимания"
-            accent={stats.overdue > 0 ? "red" : "gray"}
           />
         </div>
 
         {/* ── Прогресс семестра ──────────────────────────────────────── */}
-        {/*
         {semesterProgress && (
-          <div className="bg-white rounded-3xl p-4 flex flex-col gap-3">
-            <span className="text-[13px] font-semibold text-gray-400 uppercase tracking-wide">
+          <div className="flex flex-col items-center gap-2">
+            <span className="text-lg text-center font-medium text-gray-400 uppercase tracking-wide w-full">
               Прогресс семестра
             </span>
-            <ProgressBar
-              label={`Неделя ${semesterProgress.current} из ${semesterProgress.total}`}
-              value={semesterProgress.current}
-              total={semesterProgress.total}
-              color="bg-black"
-            />
-            <ProgressBar
-              label="Выполнено задач"
-              value={stats.completed}
-              total={stats.total}
-              color="bg-green-500"
-            />
-            {stats.overdue > 0 && (
-              <ProgressBar
-                label="Просрочено"
-                value={stats.overdue}
+            <div className="bg-white rounded-3xl p-4 flex flex-col gap-3 w-full">
+              <ProgressBarUI
+                label={`Выполнено задач (${stats.completed}/${stats.total})`}
+                value={stats.completed}
                 total={stats.total}
-                color="bg-red-400"
+                color="success"
               />
-            )}
-          </div>
-        )}
-        */}
-
-        {/* ── По дисциплинам ───────────────────────────────────────────── */}
-        {/*
-        {subjectStats.length > 0 && (
-          <div className="bg-white rounded-3xl px-4 py-3">
-            <span className="text-[13px] font-semibold text-gray-400 uppercase tracking-wide">
-              По дисциплинам
-            </span>
-            <div className="mt-2">
-              {subjectStats.map((s) => (
-                <SubjectStatRow
-                  key={s.id}
-                  name={s.name}
-                  total={s.total}
-                  completed={s.completed}
-                  overdue={s.overdue}
+              {stats.overdue > 0 && (
+                <ProgressBarUI
+                  label={`Просрочено (${stats.overdue})`}
+                  value={stats.overdue}
+                  total={stats.total}
+                  color="danger"
                 />
-              ))}
+              )}
             </div>
           </div>
         )}
-        */}
+
+        {/* ── По дисциплинам ───────────────────────────────────────────── */}
+        {subjectStats.length > 0 && (
+          <div className="flex flex-col items-center gap-2">
+            <span className="text-lg text-center font-medium text-gray-400 uppercase tracking-wide w-full">
+              По дисциплинам
+            </span>
+            <div className="bg-white rounded-3xl p-4 flex flex-col gap-3 w-full">
+                {subjectStats.map((s) => (
+                  <SubjectStatRow
+                    key={s.id}
+                    name={s.name}
+                    total={s.total}
+                    completed={s.completed}
+                    overdue={s.overdue}
+                  />
+                ))}
+            </div>
+          </div>
+        )}
 
         {/* ── Архив ─────────────────────────────────────────────────── */}
-        {/*
         <div className="flex flex-col gap-2">
-          <span className="text-[13px] font-semibold text-gray-400 uppercase tracking-wide px-1">
+          <span className="text-lg text-center font-medium text-gray-400 uppercase tracking-wide w-full">
             Архив
           </span>
           <ArchiveTabs
@@ -342,7 +292,6 @@ export default function StatsPage() {
             }
           />
         </div>
-        */}
 
       </main>
     </div>
