@@ -1,7 +1,5 @@
 // app/settings/subjects/new/page.tsx
-
-import { SubjectForm } from "@/components/subjects/SubjectForm";
-
+import { SubjectWizard } from "@/components/subjects/SubjectWizard";
 export default function NewSubjectPage() {
-  return <SubjectForm mode="new" />;
+  return <SubjectWizard mode="new" />;
 }
