@@ -62,7 +62,9 @@ interface UseTasksResult {
 export function useTasks(): UseTasksResult {
   const { data, isLoading, error } = useAsyncStore();
 
-  const tasks = data ? computeAndSortTasks(data.tasks) : [];
+  const tasks = useMemo(() => {
+    return data ? computeAndSortTasks(data.tasks) : [];
+  }, [data]);
 
   return { tasks, isLoading, error };
 }

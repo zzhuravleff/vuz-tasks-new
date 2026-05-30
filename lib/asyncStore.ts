@@ -58,7 +58,9 @@ class AsyncStore {
         return this.cache;
       }
 
+      console.time("parse"); // временно для проверки производительности парсинга
       const parsed = JSON.parse(raw) as AppData;
+      console.timeEnd("parse"); // временно для проверки производительности парсинга
       this.cache = parsed;
       return this.cache;
     } catch {
@@ -116,11 +118,15 @@ class AsyncStore {
       return this.computedTasksCache;
     }
 
+
+    console.time("computeTasks"); // временно для проверки эффективности кэширования
     // Пересчитываем только если данные изменились
     const computed = computeAndSortTasks(data.tasks);
+    console.timeEnd("computeTasks"); // временно для проверки эффективности кэширования
 
     this.computedTasksCache = computed;
     this.computedVersion = data.version;
+    
 
     return computed;
   }
