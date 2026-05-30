@@ -27,6 +27,9 @@ class AsyncStore {
   private cache: AppData | null = null;
   private listeners: Set<Listener> = new Set();
   private loadPromise: Promise<AppData> | null = null;
+  
+  private computedTasksCache: ReturnType<typeof computeAndSortTasks> | null = null;
+  private computedVersion: number | null = null;
 
   // ── Загрузка ─────────────────────────────────────────────────────────────
 
@@ -69,6 +72,7 @@ class AsyncStore {
   private async save(data: AppData): Promise<void> {
     const updated: AppData = { ...data, version: Date.now() };
     this.cache = updated;
+    this.computedTasksCache = null; // Сбрасываем кэш вычисленных задач
 
     await microtask();
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
@@ -97,9 +101,28 @@ class AsyncStore {
     return this.load();
   }
 
+  // async getTasks() {
+  //   const data = await this.load();
+  //   return computeAndSortTasks(data.tasks);
+  // }
   async getTasks() {
     const data = await this.load();
-    return computeAndSortTasks(data.tasks);
+
+    // Возвращаем кэш если данные не изменились
+    if (
+      this.computedTasksCache &&
+      this.computedVersion === data.version
+    ) {
+      return this.computedTasksCache;
+    }
+
+    // Пересчитываем только если данные изменились
+    const computed = computeAndSortTasks(data.tasks);
+
+    this.computedTasksCache = computed;
+    this.computedVersion = data.version;
+
+    return computed;
   }
 
   async getTaskById(id: string) {
