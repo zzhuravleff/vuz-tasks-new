@@ -2,7 +2,7 @@
 
 "use client";
 
-import { memo, useCallback, useMemo, useTransition } from "react";
+import { memo, useCallback, useEffect, useMemo, useTransition } from "react";
 import {ChartAreaStacked, Gear, House, Plus} from '@gravity-ui/icons';
 import { usePathname, useRouter } from "next/navigation";
 import { Button } from "@heroui/react";
@@ -17,9 +17,13 @@ export const BottomNav = memo(() => {
     const [isPending, startTransition] = useTransition();
     const { tasks, isLoading } = useTasks();
 
+    useEffect(() => {
+      router.prefetch("/tasks/new");
+    }, [router]);
+
   const navigate = useCallback(
     (path: string) => {
-      startTransition(() => router.push(path));
+      router.push(path);
     },
     [router]
   );

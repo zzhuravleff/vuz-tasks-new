@@ -8,10 +8,9 @@ import { useAsyncStore } from "@/hooks/useAsyncStore";
 import { asyncStore } from "@/lib/asyncStore";
 import { computeTask } from "@/lib/scheduleUtils";
 import { formatDeadline, formatDateDisplay } from "@/lib/scheduleUtils";
-import { TaskSkeleton } from "@/components/tasks/TaskSkeleton";
 import { LESSON_TIMES, ComputedTask } from "@/types";
 import { Button, Chip, IconChevronLeft } from "@heroui/react";
-import { Calendar, Clock, Star, TrashBin } from "@gravity-ui/icons";
+import { Calendar, Clock, Star } from "@gravity-ui/icons";
 
 // ─── Кнопка действия ───────────────────────────────────────────────────────
 
@@ -105,13 +104,11 @@ export default function TaskDetailPage() {
 
   // ── Загружаем задачу ОДИН РАЗ из asyncStore напрямую ──────────────────
   const [task, setTask] = useState<ComputedTask | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     asyncStore.getData().then((data) => {
       const found = data.tasks.find((t) => t.id === id);
       setTask(found ? computeTask(found) : null);
-      setIsLoading(false);
     });
     // НЕ подписываемся на store — поля не будут сбрасываться
   }, [id]);
@@ -200,17 +197,6 @@ export default function TaskDetailPage() {
   }, [task]);
 
   const isInactive = task?.computedStatus === "completed";
-
-  if (isLoading) {
-    return (
-      <div className="flex flex-col min-h-screen bg-gray-50">
-        <div className="px-4 pt-6 pb-2">
-          <div className="h-8 w-8 bg-gray-200 rounded-xl animate-pulse" />
-        </div>
-        <div className="px-4 pt-2"><TaskSkeleton count={1} /></div>
-      </div>
-    );
-  }
 
   if (!task) {
     return (
