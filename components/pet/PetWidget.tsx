@@ -36,7 +36,8 @@ export const PetWidget = memo(({ tasks, mini = false }: PetWidgetProps) => {
   // ── Мини — питомец + круговой прогресс ───────────────────────────────
   if (mini) {
     return (
-      <PetCanvas state={status.state} size={24} />
+      // <PetCanvas state={status.state} size={24} />
+      <PetCanvas state={status.state} size={28} mini />
     );
   }
 

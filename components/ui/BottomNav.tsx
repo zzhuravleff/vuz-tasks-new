@@ -2,7 +2,7 @@
 
 "use client";
 
-import { memo, useCallback, useTransition } from "react";
+import { memo, useCallback, useMemo, useTransition } from "react";
 import {ChartAreaStacked, Gear, House, Plus} from '@gravity-ui/icons';
 import { usePathname, useRouter } from "next/navigation";
 import { Button } from "@heroui/react";
@@ -16,24 +16,6 @@ export const BottomNav = memo(() => {
     const router = useRouter();
     const [isPending, startTransition] = useTransition();
     const { tasks, isLoading } = useTasks();
-
-    const NAV_TABS = [
-    {
-      path: "/",
-      label: "Главная",
-      icon: <House className="relative z-10 size-6" />,
-    },
-    {
-      path: "/stats",
-      label: "Статистика",
-      icon: <PetWidget tasks={tasks} mini />,
-    },
-    {
-      path: "/settings",
-      label: "Настройки",
-      icon: <Gear className="relative z-10 size-6" />,
-    },
-  ];
 
   const navigate = useCallback(
     (path: string) => {
@@ -50,6 +32,24 @@ export const BottomNav = memo(() => {
     [pathname]
   );
 
+  const navTabs = useMemo (() => [
+    {
+      path: "/",
+      label: "Главная",
+      icon: <House className="relative z-10 size-6" />,
+    },
+    {
+      path: "/stats",
+      label: "Статистика",
+      icon: isLoading ? <ChartAreaStacked className="relative z-10 size-6" /> : <PetWidget tasks={tasks} mini />,
+    },
+    {
+      path: "/settings",
+      label: "Настройки",
+      icon: <Gear className="relative z-10 size-6" />,
+    },
+  ], [tasks, isLoading]);
+
   // Скрываем навбар на экранах создания/редактирования
   const isHidden =
     pathname.startsWith("/tasks/") ||
@@ -62,8 +62,7 @@ export const BottomNav = memo(() => {
     <nav className={`fixed bottom-0 z-50 flex justify-center w-full bg-white/20 backdrop-blur-xs border-t border-gray-200/50 py-2 pb-6`}>
       <div className="flex items-center gap-2">
         
-        {NAV_TABS.map((tab) => {
-          const Icon = tab.icon;
+        {navTabs.map((tab) => {
           const active = isActive(tab.path);
 
           return (

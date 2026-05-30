@@ -8,10 +8,12 @@ import { PetState } from "@/lib/petUtils";
 interface PetCanvasProps {
   state: PetState;
   size?: number;
+  mini?: boolean;
 }
 
 type DrawFn = (ctx: CanvasRenderingContext2D, w: number, h: number) => void;
 
+// полная версия
 const DRAWINGS: Record<PetState, DrawFn> = {
   happy: (ctx, w, h) => {
     const cx = w / 2, cy = h / 2;
@@ -187,7 +189,135 @@ const DRAWINGS: Record<PetState, DrawFn> = {
   },
 };
 
-export const PetCanvas = memo(({ state, size = 120 }: PetCanvasProps) => {
+// мини версия
+const MINI_DRAWINGS: Record<PetState, DrawFn> = {
+  happy: (ctx, w, h) => {
+    const cx = w / 2;
+    const cy = h / 2;
+
+    // Голова
+    ctx.fillStyle = "#97C459";
+    ctx.beginPath();
+    ctx.arc(cx, cy, w * 0.48, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Глаза
+    ctx.fillStyle = "#2C5A0E";
+
+    ctx.beginPath();
+    ctx.arc(cx - w * 0.11, cy - h * 0.05, w * 0.045, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.arc(cx + w * 0.11, cy - h * 0.05, w * 0.045, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Улыбка
+    ctx.strokeStyle = "#2C5A0E";
+    ctx.lineWidth = w * 0.03;
+    ctx.lineCap = "round";
+
+    ctx.beginPath();
+    ctx.arc(cx, cy + h * 0.02, w * 0.11, 0.15 * Math.PI, 0.85 * Math.PI);
+    ctx.stroke();
+  },
+
+  neutral: (ctx, w, h) => {
+    const cx = w / 2;
+    const cy = h / 2;
+
+    ctx.fillStyle = "#85B7EB";
+    ctx.beginPath();
+    ctx.arc(cx, cy, w * 0.48, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = "#0C447C";
+
+    ctx.beginPath();
+    ctx.arc(cx - w * 0.11, cy - h * 0.05, w * 0.045, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.arc(cx + w * 0.11, cy - h * 0.05, w * 0.045, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.strokeStyle = "#0C447C";
+    ctx.lineWidth = w * 0.03;
+    ctx.lineCap = "round";
+
+    ctx.beginPath();
+    ctx.moveTo(cx - w * 0.1, cy + h * 0.12);
+    ctx.lineTo(cx + w * 0.1, cy + h * 0.12);
+    ctx.stroke();
+  },
+
+  sad: (ctx, w, h) => {
+    const cx = w / 2;
+    const cy = h / 2;
+
+    ctx.fillStyle = "#EF9F27";
+    ctx.beginPath();
+    ctx.arc(cx, cy, w * 0.48, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = "#633806";
+
+    ctx.beginPath();
+    ctx.arc(cx - w * 0.11, cy - h * 0.05, w * 0.045, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.arc(cx + w * 0.11, cy - h * 0.05, w * 0.045, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.strokeStyle = "#633806";
+    ctx.lineWidth = w * 0.03;
+    ctx.lineCap = "round";
+
+    ctx.beginPath();
+    ctx.arc(cx, cy + h * 0.22, w * 0.1, Math.PI * 1.15, Math.PI * 1.85);
+    ctx.stroke();
+  },
+
+  sick: (ctx, w, h) => {
+    const cx = w / 2;
+    const cy = h / 2;
+
+    ctx.fillStyle = "#F09595";
+    ctx.beginPath();
+    ctx.arc(cx, cy, w * 0.48, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.strokeStyle = "#A32D2D";
+    ctx.lineWidth = w * 0.025;
+    ctx.lineCap = "round";
+
+    // X глаза
+    [[-0.11, -0.05], [0.11, -0.05]].forEach(([dx, dy]) => {
+      const ex = cx + dx * w;
+      const ey = cy + dy * h;
+      const r = w * 0.035;
+
+      ctx.beginPath();
+      ctx.moveTo(ex - r, ey - r);
+      ctx.lineTo(ex + r, ey + r);
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.moveTo(ex + r, ey - r);
+      ctx.lineTo(ex - r, ey + r);
+      ctx.stroke();
+    });
+
+    // Рот
+    ctx.beginPath();
+    ctx.moveTo(cx - w * 0.08, cy + h * 0.1);
+    ctx.lineTo(cx + w * 0.08, cy + h * 0.1);
+    ctx.stroke();
+  },
+};
+
+export const PetCanvas = memo(({ state, size = 120, mini = false }: PetCanvasProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -196,8 +326,10 @@ export const PetCanvas = memo(({ state, size = 120 }: PetCanvasProps) => {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
     ctx.clearRect(0, 0, size, size);
-    DRAWINGS[state](ctx, size, size);
-  }, [state, size]);
+     const drawings = mini ? MINI_DRAWINGS : DRAWINGS;
+
+    drawings[state](ctx, size, size);
+  }, [state, size, mini]);
 
   return (
     <canvas
