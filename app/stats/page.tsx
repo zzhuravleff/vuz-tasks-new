@@ -7,8 +7,8 @@ import { useAsyncStore } from "@/hooks/useAsyncStore";
 import { useTasks } from "@/hooks/useAsyncStore";
 import { useWeekInfo } from "@/hooks/useSchedule";
 import { TaskList } from "@/components/tasks/TaskList";
-import { PageHeader } from "@/components/ui/PageHeader";
 import { ComputedTask } from "@/types";
+import { Chip } from "@heroui/react";
 
 // ─── Типы ──────────────────────────────────────────────────────────────────
 
@@ -25,10 +25,10 @@ interface StatCardProps {
 
 const StatCard = memo(({ label, value, sub, accent = "gray" }: StatCardProps) => {
   const accentClass = {
-    green: "text-green-600",
-    red: "text-red-500",
+    green: "text-success",
+    red: "text-danger",
     gray: "text-black",
-    blue: "text-blue-600",
+    blue: "text-accent",
   }[accent];
 
   return (
@@ -225,9 +225,15 @@ export default function StatsPage() {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <PageHeader title="Статистика" showWeekInfo />
+      <main className="flex-1 pb-24 flex flex-col gap-3">
 
-      <main className="flex-1 px-4 pb-24 flex flex-col gap-3">
+        {weekInfo && (
+          <div className="flex justify-center select-none">
+            <Chip variant="soft" color={weekInfo.isEven ? "accent" : "warning"}>
+              {weekInfo.weekLabel}
+            </Chip>
+          </div>
+        )}
 
         {/* ── Цифры ─────────────────────────────────────────────────── */}
         <div className="grid grid-cols-2 gap-2">

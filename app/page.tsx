@@ -6,7 +6,6 @@ import { useMemo } from "react";
 import { useAsyncStore } from "@/hooks/useAsyncStore";
 import { useTasks } from "@/hooks/useAsyncStore";
 import { TaskList } from "@/components/tasks/TaskList";
-import { PageHeader } from "@/components/ui/PageHeader";
 
 export default function HomePage() {
   const { data } = useAsyncStore();
@@ -29,7 +28,7 @@ export default function HomePage() {
   );
 
   return (
-    <div className="flex flex-col items-center gap-3 min-h-screen mb-24">
+    <div className="flex flex-col items-center gap-3 mb-24">
       <main className="flex-1 w-full">
         <TaskList
           tasks={activeTasks}

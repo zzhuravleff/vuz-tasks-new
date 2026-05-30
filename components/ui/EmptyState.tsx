@@ -5,6 +5,8 @@
 import { memo, useCallback } from "react";
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { TextAlignLeft } from "@gravity-ui/icons";
+import { Button } from "@heroui/react";
 
 interface EmptyStateProps {
   title?: string;
@@ -22,13 +24,7 @@ export const EmptyState = memo(({
 }: EmptyStateProps) => (
   <div className="flex flex-col items-center justify-center gap-4 py-16 px-6 text-center">
     {/* Иконка */}
-    <div className="w-16 h-16 rounded-3xl bg-gray-50 flex items-center justify-center">
-      <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-        <rect x="6" y="8" width="20" height="3" rx="1.5" fill="#E5E7EB" />
-        <rect x="6" y="14.5" width="14" height="3" rx="1.5" fill="#E5E7EB" />
-        <rect x="6" y="21" width="10" height="3" rx="1.5" fill="#E5E7EB" />
-      </svg>
-    </div>
+    <TextAlignLeft className="size-10 text-black/10" />
 
     <div className="flex flex-col gap-1">
       <p className="text-black font-semibold text-base">{title}</p>
@@ -36,12 +32,11 @@ export const EmptyState = memo(({
     </div>
 
     {action && (
-      <button
+      <Button
         onClick={action.onClick}
-        className="mt-1 px-6 py-2.5 bg-black text-white text-sm font-medium rounded-2xl active:scale-95 transition-transform"
       >
         {action.label}
-      </button>
+      </Button>
     )}
   </div>
 ));
