@@ -44,7 +44,7 @@ export const PetWidget = memo(({ tasks, mini = false }: PetWidgetProps) => {
   // ── Полная версия для статистики ──────────────────────────────────────
   return (
     <div
-      className="rounded-3xl p-4 flex flex-col items-center gap-4 bg-white"
+      className={`rounded-3xl p-4 flex flex-col items-center gap-4 bg-white border-2 border-${colors.color}`}
     >
       {/* Питомец + бейдж */}
       <Chip
@@ -62,10 +62,10 @@ export const PetWidget = memo(({ tasks, mini = false }: PetWidgetProps) => {
       {/* Бар здоровья */}
       <div className="w-full flex flex-col gap-1.5">
         <div className="flex items-center justify-between">
-          <span className="text-[12px] font-medium">
+          <span className="text-base font-medium">
             Здоровье питомца
           </span>
-          <span className={`text-[13px] font-bold text-${colors.color}`}>
+          <span className={`text-base font-bold text-${colors.color}`}>
             {status.health} / 100
           </span>
         </div>

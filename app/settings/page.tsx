@@ -7,14 +7,13 @@ import { useRouter } from "next/navigation";
 import { useAsyncStore } from "@/hooks/useAsyncStore";
 import { useWeekInfo } from "@/hooks/useSchedule";
 import { asyncStore } from "@/lib/asyncStore";
-import { PageHeader } from "@/components/ui/PageHeader";
 import { Button, Chip } from "@heroui/react";
 
 // ─── Секция ────────────────────────────────────────────────────────────────
 
 const Section = memo(({ title, children }: { title: string; children: React.ReactNode }) => (
   <div className="flex flex-col gap-2">
-    <span className="text-[12px] font-semibold text-gray-400 uppercase tracking-wide px-1">
+    <span className="text-lg text-center font-medium text-gray-400 uppercase tracking-wide">
       {title}
     </span>
     <div className="bg-white rounded-3xl overflow-hidden">
@@ -39,17 +38,17 @@ const SettingsRow = memo(({ label, sub, onClick, right, destructive }: SettingsR
     onClick={onClick}
     disabled={!onClick}
     className={`
-      w-full flex items-center justify-between gap-3
-      px-4 py-3.5 border-b border-gray-50 last:border-0
+      w-full flex items-center rounded-3xl justify-between gap-3
+      p-4 border-b border-gray-50 last:border-0
       active:bg-gray-50 transition-colors text-left
       disabled:pointer-events-none
     `}
   >
     <div className="flex flex-col gap-0.5 flex-1">
-      <span className={`text-[15px] font-medium ${destructive ? "text-danger" : "text-black"}`}>
+      <span className={`text-base font-medium ${destructive ? "text-danger" : "text-black"}`}>
         {label}
       </span>
-      {sub && <span className="text-[12px] text-gray-400">{sub}</span>}
+      {sub && <span className="text-sm text-gray-400">{sub}</span>}
     </div>
     {right ?? (
       onClick && (
@@ -76,7 +75,7 @@ const ConfirmResetModal = memo(({ onConfirm, onCancel }: ConfirmResetModalProps)
       <div className="flex flex-col gap-1.5 text-center">
         <h2 className="text-[18px] font-bold text-black">Сбросить данные?</h2>
         <p className="text-[14px] text-gray-400 leading-snug">
-          Все задачи, предметы и расписание будут удалены. Это действие нельзя отменить.
+          Все задачи, дисциплины и расписание будут удалены. Это действие нельзя отменить.
         </p>
       </div>
       <Button
@@ -185,7 +184,7 @@ export default function SettingsPage() {
             <SettingsRow
               label="Текущая неделя"
               right={
-                <Chip variant="soft" color={weekInfo.isEven ? "accent" : "warning"}>
+                <Chip variant="soft" size="lg" color={weekInfo.isEven ? "accent" : "warning"}>
                   {weekInfo.weekLabel}
                 </Chip>
               }
@@ -193,19 +192,19 @@ export default function SettingsPage() {
           )}
         </Section>
 
-        {/* ── Предметы ────────────────────────────────────────────── */}
-        <Section title="Предметы">
+        {/* ── Дисциплины ────────────────────────────────────────────── */}
+        <Section title="Дисциплины">
           <SettingsRow
-            label="Управление предметами"
+            label="Управление дисциплинами"
             sub={
               isLoading
                 ? "Загрузка..."
-                : `${data?.subjects.length ?? 0} предметов`
+                : `${data?.subjects.length ?? 0} дисциплин`
             }
             onClick={() => navigate("/settings/subjects")}
           />
           <SettingsRow
-            label="Добавить предмет"
+            label="Добавить дисциплину"
             onClick={() => navigate("/settings/subjects/new")}
           />
         </Section>
@@ -240,14 +239,14 @@ export default function SettingsPage() {
           />
           <SettingsRow
             label="Сбросить все данные"
-            sub="Удалить задачи, предметы и расписание"
+            sub="Удалить задачи, дисциплины и расписание"
             onClick={() => setShowResetModal(true)}
             destructive
           />
         </Section>
 
         {/* ── О приложении ────────────────────────────────────────── */}
-        <Section title="О приложении">
+        {/* <Section title="О приложении">
           <SettingsRow
             label="ВУЗадачи - Трекер задач для студентов"
             sub="Отслеживайте свои учебные задачи эффективно"
@@ -255,7 +254,7 @@ export default function SettingsPage() {
               <span className="text-[12px] text-gray-300 font-medium">v1.1</span>
             }
           />
-        </Section>
+        </Section> */}
 
       </main>
 

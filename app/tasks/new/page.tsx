@@ -154,7 +154,7 @@ const ScheduleForm = ({ onSubmit, isSubmitting }: ScheduleFormProps) => {
   const [selectedSlot, setSelectedSlot] = useState<LessonSlot | null>(null);
   const [description, setDescription] = useState("");
 
-  // Пары выбранного предмета (ближайшие 60 дней)
+  // Пары выбранной дисциплины (ближайшие 60 дней)
   const subjectSlots = useMemo(() => {
     if (!data || !selectedSubjectId) return [];
     const subject = data.subjects.find((s) => s.id === selectedSubjectId);
@@ -203,9 +203,9 @@ const ScheduleForm = ({ onSubmit, isSubmitting }: ScheduleFormProps) => {
   if (!data?.subjects.length) {
     return (
       <div className="bg-white rounded-3xl p-6 text-center">
-        <p className="text-gray-400 text-[14px]">Нет предметов</p>
+        <p className="text-gray-400 text-[14px]">Нет дисциплин</p>
         <p className="text-gray-300 text-[13px] mt-1">
-          Добавьте предметы в настройках
+          Добавьте дисциплины в настройках
         </p>
       </div>
     );
@@ -224,8 +224,8 @@ const ScheduleForm = ({ onSubmit, isSubmitting }: ScheduleFormProps) => {
         />
       </Field>
 
-      {/* Выбор предмета */}
-      <Field label="Предмет">
+      {/* Выбор дисциплины */}
+      <Field label="Дисциплина">
         <div className="flex flex-col gap-2">
           {data.subjects.map((subject) => (
             <button

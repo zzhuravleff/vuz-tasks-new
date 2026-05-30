@@ -90,7 +90,7 @@ export function getLessonDeadline(lessonDate: string, lessonNumber: number): str
 // ─── Генерация слотов ──────────────────────────────────────────────────────
 
 /**
- * Возвращает все пары предмета в диапазоне дат [from, to].
+ * Возвращает все пары дисциплины в диапазоне дат [from, to].
  */
 export function getLessonSlots(
   subject: Subject,
@@ -133,7 +133,7 @@ export function getLessonSlots(
 }
 
 /**
- * Возвращает ближайшие N пар для всех предметов начиная с указанной даты.
+ * Возвращает ближайшие N пар для всех дисциплин начиная с указанной даты.
  */
 export function getUpcomingLessonSlots(
   subjects: Subject[],

@@ -24,7 +24,7 @@ export default function EditSubjectPage() {
   if (!subject) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <p className="text-gray-400 text-[15px]">Предмет не найден</p>
+        <p className="text-gray-400 text-[15px]">Дисциплина не найдена</p>
       </div>
     );
   }

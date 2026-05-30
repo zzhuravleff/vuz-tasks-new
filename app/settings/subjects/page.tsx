@@ -26,7 +26,7 @@ function ruleLabel(rule: Subject["rules"][number]): string {
   return `${day}${type} · ${lessons} пара`;
 }
 
-// ─── Карточка предмета ─────────────────────────────────────────────────────
+// ─── Карточка дисциплины ─────────────────────────────────────────────────────
 
 interface SubjectCardProps {
   subject: Subject;
@@ -158,7 +158,7 @@ export default function SubjectsPage() {
           </svg>
         </button>
 
-        <h1 className="text-[17px] font-bold text-black">Предметы</h1>
+        <h1 className="text-[17px] font-bold text-black">Дисциплины</h1>
 
         {/* Добавить */}
         <button
@@ -185,14 +185,14 @@ export default function SubjectsPage() {
               </svg>
             </div>
             <div className="flex flex-col items-center gap-1">
-              <p className="text-black font-semibold text-base">Нет предметов</p>
-              <p className="text-gray-400 text-sm">Добавьте первый предмет</p>
+              <p className="text-black font-semibold text-base">Нет дисциплин</p>
+              <p className="text-gray-400 text-sm">Добавьте первую дисциплину</p>
             </div>
             <button
               onClick={() => navigate("/settings/subjects/new")}
               className="px-6 py-2.5 bg-black text-white text-sm font-medium rounded-2xl active:scale-95 transition-transform"
             >
-              Добавить предмет
+              Добавить дисциплину
             </button>
           </div>
         )}

@@ -181,7 +181,7 @@ class AsyncStore {
     });
   }
 
-  // ── Предметы ──────────────────────────────────────────────────────────────
+  // ── Дисциплины ──────────────────────────────────────────────────────────────
 
   async addSubject(subject: Subject): Promise<void> {
     const data = await this.load();
@@ -206,7 +206,7 @@ class AsyncStore {
     await this.save({
       ...data,
       subjects: data.subjects.filter((s) => s.id !== id),
-      // Удаляем задачи привязанные к предмету
+      // Удаляем задачи привязанные к дисциплине
       tasks: data.tasks.filter(
         (t) => t.type !== "По расписанию" || t.subjectId !== id
       ),

@@ -78,7 +78,7 @@ const ProgressBar = memo(({ label, value, total, color }: ProgressBarProps) => {
 });
 ProgressBar.displayName = "ProgressBar";
 
-// ─── Статистика по предметам ───────────────────────────────────────────────
+// ─── Статистика по дисплинам ───────────────────────────────────────────────
 
 interface SubjectStatRowProps {
   name: string;
@@ -185,7 +185,7 @@ export default function StatsPage() {
     return { pct, current: weekInfo.weekNumber, total: data.semester.weeks };
   }, [data, weekInfo]);
 
-  // ── Статистика по предметам ────────────────────────────────────────────
+  // ── Статистика по дисциплинам ────────────────────────────────────────────
 
   const subjectStats = useMemo(() => {
     if (!data) return [];
@@ -297,12 +297,12 @@ export default function StatsPage() {
         )}
         */}
 
-        {/* ── По предметам ───────────────────────────────────────────── */}
+        {/* ── По дисциплинам ───────────────────────────────────────────── */}
         {/*
         {subjectStats.length > 0 && (
           <div className="bg-white rounded-3xl px-4 py-3">
             <span className="text-[13px] font-semibold text-gray-400 uppercase tracking-wide">
-              По предметам
+              По дисциплинам
             </span>
             <div className="mt-2">
               {subjectStats.map((s) => (

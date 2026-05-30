@@ -1,7 +1,7 @@
 // app/settings/subjects/new/page.tsx
 // app/settings/subjects/[id]/page.tsx — один компонент для обоих случаев
 
-// Сначала создадим общий компонент формы предмета:
+// Сначала создадим общий компонент формы дисциплины:
 // app/settings/subjects/_components/SubjectForm.tsx
 
 "use client";
@@ -258,7 +258,7 @@ const RuleCard = memo(({ rule, onDelete }: RuleCardProps) => {
 });
 RuleCard.displayName = "RuleCard";
 
-// ─── Главный компонент формы предмета ─────────────────────────────────────
+// ─── Главный компонент формы дисциплины ─────────────────────────────────────
 
 interface SubjectFormProps {
   initial?: Subject;
@@ -330,7 +330,7 @@ export function SubjectForm({ initial, mode }: SubjectFormProps) {
         </button>
 
         <h1 className="text-[17px] font-bold text-black">
-          {mode === "new" ? "Новый предмет" : "Редактировать"}
+          {mode === "new" ? "Новая дисциплина" : "Редактировать"}
         </h1>
 
         <button

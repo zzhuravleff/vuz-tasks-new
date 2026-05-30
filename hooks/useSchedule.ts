@@ -39,7 +39,7 @@ export function useUpcomingSlots(limit = 30): UseUpcomingSlotsResult {
   return { slots, isLoading };
 }
 
-// ─── Хук для пар конкретного предмета ─────────────────────────────────────
+// ─── Хук для пар конкретной дисциплины ─────────────────────────────────────
 
 interface UseSubjectSlotsResult {
   slots: LessonSlot[];

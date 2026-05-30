@@ -182,7 +182,7 @@ export const TaskCard = memo(({ task, subjectName }: TaskCardProps) => {
           <div className="flex justify-between">
             <span className="font-medium text-xl line-clamp-2 leading-6">
               {task.type === "По расписанию"
-              ? (subjectName ?? "Предмет")
+              ? (subjectName ?? "Дисциплина")
               : task.title}
             </span>
           </div>
