@@ -2,7 +2,7 @@
 
 "use client";
 
-import { memo, useCallback, useRef, useState, useTransition } from "react";
+import { memo, useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { ComputedTask, TaskStatus } from "@/types";
 import { formatDateDisplay, formatDeadline, formatTimeDisplay } from "@/lib/scheduleUtils";
@@ -121,8 +121,12 @@ export const TaskCard = memo(({ task, subjectName }: TaskCardProps) => {
   const [isDone, setIsDone] = useState(false);
   const [isDeleted, setIsDeleted] = useState(false);
 
+  useEffect(() => {
+    router.prefetch(`/tasks/${task.id}`);
+  }, [router, task.id]);
+
   const handleTap = useCallback(() => {
-    startTransition(() => router.push(`/tasks/${task.id}`));
+    router.push(`/tasks/${task.id}`);
   }, [router, task.id]);
 
   const handleComplete = useCallback(async () => {

@@ -19,13 +19,6 @@ const SkeletonCard = memo(() => (
         {/* Описание */}
         <div className="h-3.5 w-1/2 bg-gray-100 rounded-full" />
       </div>
-      {/* Статус */}
-      <div className="h-7 w-7 rounded-full bg-gray-100 shrink-0 mt-0.5" />
-    </div>
-    {/* Дедлайн */}
-    <div className="mt-3 pt-3 border-t border-gray-50 flex items-center gap-1.5">
-      <div className="h-3 w-3 rounded-full bg-gray-100" />
-      <div className="h-3.5 w-32 bg-gray-100 rounded-full" />
     </div>
   </div>
 ));
