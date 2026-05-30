@@ -31,10 +31,6 @@ export default function HomePage() {
   return (
     <div className="flex flex-col items-center gap-3 mb-24">
 
-      <div className="px-4 pb-2">
-        <PetWidget tasks={tasks} mini />
-      </div>
-
       <main className="flex-1 w-full">
         <TaskList
           tasks={activeTasks}

@@ -6,29 +6,34 @@ import { memo, useCallback, useTransition } from "react";
 import {ChartAreaStacked, Gear, House, Plus} from '@gravity-ui/icons';
 import { usePathname, useRouter } from "next/navigation";
 import { Button } from "@heroui/react";
+import { useTasks } from "@/hooks/useAsyncStore";
+import { PetWidget } from "../pet/PetWidget";
 
-const NAV_TABS = [
-  {
-    path: "/",
-    label: "Главная",
-    icon: House,
-  },
-  {
-    path: "/stats",
-    label: "Статистика",
-    icon: ChartAreaStacked,
-  },
-  {
-    path: "/settings",
-    label: "Настройки",
-    icon: Gear,
-  },
-];
+
 
 export const BottomNav = memo(() => {
-  const pathname = usePathname();
-  const router = useRouter();
-  const [isPending, startTransition] = useTransition();
+    const pathname = usePathname();
+    const router = useRouter();
+    const [isPending, startTransition] = useTransition();
+    const { tasks, isLoading } = useTasks();
+
+    const NAV_TABS = [
+    {
+      path: "/",
+      label: "Главная",
+      icon: <House className="relative z-10 size-6" />,
+    },
+    {
+      path: "/stats",
+      label: "Статистика",
+      icon: <PetWidget tasks={tasks} mini />,
+    },
+    {
+      path: "/settings",
+      label: "Настройки",
+      icon: <Gear className="relative z-10 size-6" />,
+    },
+  ];
 
   const navigate = useCallback(
     (path: string) => {
@@ -72,7 +77,7 @@ export const BottomNav = memo(() => {
                 <span className="absolute inset-0" />
               )}
 
-              <Icon className="relative z-10 size-6" />
+              {tab.icon}
               <span className="text-[12px] relative z-10">{tab.label}</span>
             </button>
           );
