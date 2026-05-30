@@ -9,6 +9,7 @@ import { useWeekInfo } from "@/hooks/useSchedule";
 import { TaskList } from "@/components/tasks/TaskList";
 import { ComputedTask } from "@/types";
 import { Chip } from "@heroui/react";
+import { PetWidget } from "@/components/pet/PetWidget";
 
 // ─── Типы ──────────────────────────────────────────────────────────────────
 
@@ -36,7 +37,7 @@ const StatCard = memo(({ label, value, sub, accent = "gray" }: StatCardProps) =>
       <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide">
         {label}
       </span>
-      <span className={`text-[28px] font-bold leading-none ${accentClass}`}>
+      <span className={`text-2xl font-bold leading-none ${accentClass}`}>
         {value}
       </span>
       {sub && (
@@ -227,13 +228,15 @@ export default function StatsPage() {
     <div className="flex flex-col min-h-screen">
       <main className="flex-1 pb-24 flex flex-col gap-3">
 
-        {weekInfo && (
+        {/* {weekInfo && (
           <div className="flex justify-center select-none">
             <Chip variant="soft" color={weekInfo.isEven ? "accent" : "warning"}>
               {weekInfo.weekLabel}
             </Chip>
           </div>
-        )}
+        )} */}
+
+        <PetWidget tasks={tasks} />
 
         {/* ── Цифры ─────────────────────────────────────────────────── */}
         <div className="grid grid-cols-2 gap-2">

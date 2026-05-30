@@ -6,6 +6,7 @@ import { useMemo } from "react";
 import { useAsyncStore } from "@/hooks/useAsyncStore";
 import { useTasks } from "@/hooks/useAsyncStore";
 import { TaskList } from "@/components/tasks/TaskList";
+import { PetWidget } from "@/components/pet/PetWidget";
 
 export default function HomePage() {
   const { data } = useAsyncStore();
@@ -29,6 +30,11 @@ export default function HomePage() {
 
   return (
     <div className="flex flex-col items-center gap-3 mb-24">
+
+      <div className="px-4 pb-2">
+        <PetWidget tasks={tasks} mini />
+      </div>
+
       <main className="flex-1 w-full">
         <TaskList
           tasks={activeTasks}
