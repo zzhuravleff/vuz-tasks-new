@@ -11,12 +11,12 @@ import { Chip, InfoIcon, ProgressBar } from "@heroui/react";
 // ─── Конфиг цветов ─────────────────────────────────────────────────────────
 
 const STATE_COLORS: Record<PetState, {
-  bg: string; color: "success" | "accent" | "warning" | "danger";
+  bg: string; color: "success" | "accent" | "warning" | "danger"; border: string;
 }> = {
-  happy:   { bg: "#F2FBEA", color: "success" },
-  neutral: { bg: "#E6F1FB", color: "accent" },
-  sad:     { bg: "#FAEEDA", color: "warning" },
-  sick:    { bg: "#FCEBEB", color: "danger" },
+  happy:   { bg: "#F2FBEA", color: "success", border: "border-success" },
+  neutral: { bg: "#E6F1FB", color: "accent", border: "border-accent" },
+  sad:     { bg: "#FAEEDA", color: "warning", border: "border-warning" },
+  sick:    { bg: "#FCEBEB", color: "danger", border: "border-danger" },
 };
 
 
@@ -44,7 +44,7 @@ export const PetWidget = memo(({ tasks, mini = false }: PetWidgetProps) => {
   // ── Полная версия для статистики ──────────────────────────────────────
   return (
     <div
-      className={`rounded-3xl p-4 flex flex-col items-center gap-4 bg-white border-2 border-${colors.color}`}
+      className={`rounded-3xl p-4 flex flex-col items-center gap-4 bg-white border-2 ${colors.border}`}
     >
       {/* Питомец + бейдж */}
       <Chip
@@ -83,6 +83,7 @@ export const PetWidget = memo(({ tasks, mini = false }: PetWidgetProps) => {
           {status.hint}
         </p>
       </div>
+      
     </div>
   );
 });
