@@ -6,18 +6,40 @@ import { useState, useCallback, useTransition, memo } from "react";
 import { useRouter } from "next/navigation";
 import { Subject, ScheduleRule, WeeklyRule, CustomRule } from "@/types";
 import { asyncStore } from "@/lib/asyncStore";
-import { useAsyncStore } from "@/hooks/useAsyncStore";
-import { RuleBottomSheet } from "@/components/subjects/RuleBottomSheet";
+import {
+  Button,
+  Chip,
+  Input,
+  IconChevronLeft,
+} from "@heroui/react";
 
 // ─── Константы ─────────────────────────────────────────────────────────────
 
 const DAYS_SHORT = ["", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
 
-const RULE_COLORS: Record<string, { bg: string; text: string }> = {
-  "Еженедельно": { bg: "#F3F4F6", text: "#374151" },
-  "Чёт":         { bg: "#DBEAFE", text: "#1D4ED8" },
-  "Нечёт":       { bg: "#FED7AA", text: "#C2410C" },
-  "Кастом":      { bg: "#EDE9FE", text: "#6D28D9" },
+const DAYS = [
+  { value: 1, label: "Пн" },
+  { value: 2, label: "Вт" },
+  { value: 3, label: "Ср" },
+  { value: 4, label: "Чт" },
+  { value: 5, label: "Пт" },
+  { value: 6, label: "Сб" },
+];
+
+const WEEK_TYPES = [
+  { value: "Еженедельно", label: "Еженед.", color: "accent"   },
+  { value: "Нечёт",       label: "Нечёт",   color: "warning"  },
+  { value: "Чёт",         label: "Чёт",     color: "success"  },
+  { value: "Кастом",      label: "Кастом",  color: "danger"   },
+] as const;
+
+type WeekTypeValue = "Еженедельно" | "Нечёт" | "Чёт" | "Кастом";
+
+const RULE_CHIP_COLOR: Record<string, "default" | "accent" | "warning" | "success" | "danger"> = {
+  "Еженедельно": "accent",
+  "Нечёт":       "warning",
+  "Чёт":         "success",
+  "Кастом":      "danger",
 };
 
 function ruleLabel(rule: ScheduleRule): string {
@@ -34,34 +56,206 @@ function ruleLabel(rule: ScheduleRule): string {
 
 // ─── Строка правила ────────────────────────────────────────────────────────
 
-const RuleRow = memo(({ rule, onDelete }: { rule: ScheduleRule; onDelete: (id: string) => void }) => {
-  const colors = RULE_COLORS[rule.type] ?? RULE_COLORS["Еженедельно"];
+const RuleRow = memo(({ rule, onDelete }: {
+  rule: ScheduleRule;
+  onDelete: (id: string) => void;
+}) => (
+  <div className="flex items-center gap-3 py-3 border-b border-gray-100 last:border-0">
+    <Chip
+      color={RULE_CHIP_COLOR[rule.type] ?? "default"}
+      variant="soft"
+      size="sm"
+      className="shrink-0"
+    >
+      {rule.type}
+    </Chip>
+    <span className="text-sm text-black flex-1">{ruleLabel(rule)}</span>
+    <Button
+      isIconOnly
+      size="sm"
+      variant="danger-soft"
+      onPress={() => onDelete(rule.id)}
+    >
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+        <path
+          d="M2.5 3.5H11.5M5 3.5V2.5H9V3.5M4.5 3.5V11C4.5 11.3 4.7 11.5 5 11.5H9C9.3 11.5 9.5 11.3 9.5 11V3.5"
+          stroke="currentColor" strokeWidth="1.25"
+          strokeLinecap="round" strokeLinejoin="round"
+        />
+      </svg>
+    </Button>
+  </div>
+));
+RuleRow.displayName = "RuleRow";
+
+// ─── Сегментед контрол (кнопки-переключатели) ─────────────────────────────
+
+interface SegmentedProps<T extends string> {
+  options: readonly { value: T; label: string }[];
+  value: T;
+  onChange: (v: T) => void;
+  multi?: boolean;
+  selectedMulti?: T[];
+  onToggleMulti?: (v: T) => void;
+}
+
+function Segmented<T extends string>({
+  options, value, onChange, multi, selectedMulti = [], onToggleMulti,
+}: SegmentedProps<T>) {
   return (
-    <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-50 last:border-0">
-      <span
-        className="text-[11px] font-semibold px-2 py-0.5 rounded-full shrink-0"
-        style={{ background: colors.bg, color: colors.text }}
-      >
-        {rule.type}
+    <div className="flex gap-1 flex-wrap">
+      {options.map(opt => {
+        const isActive = multi
+          ? selectedMulti.includes(opt.value)
+          : value === opt.value;
+
+        return (
+          <Button
+            key={opt.value}
+            size="sm"
+            variant={isActive ? "primary" : "secondary"}
+            onPress={() => multi ? onToggleMulti?.(opt.value) : onChange(opt.value)}
+          >
+            {opt.label}
+          </Button>
+        );
+      })}
+    </div>
+  );
+}
+
+// ─── Форма добавления правила ──────────────────────────────────────────────
+
+interface AddRuleFormProps {
+  onAdd: (rules: ScheduleRule[]) => void;
+}
+
+const LESSON_OPTIONS = [1, 2, 3, 4, 5, 6].map(l => ({
+  value: String(l) as string,
+  label: String(l),
+}));
+
+const DAY_OPTIONS = DAYS.map(d => ({
+  value: String(d.value) as string,
+  label: d.label,
+}));
+
+const AddRuleForm = memo(({ onAdd }: AddRuleFormProps) => {
+  const [weekType, setWeekType] = useState<WeekTypeValue>("Еженедельно");
+  const [selectedDays, setSelectedDays] = useState<number[]>([]);
+  const [selectedLessons, setSelectedLessons] = useState<number[]>([]);
+  const [customDate, setCustomDate] = useState("");
+
+  const toggleDay = useCallback((v: string) => {
+    const num = Number(v);
+    setSelectedDays(prev =>
+      prev.includes(num) ? prev.filter(d => d !== num) : [...prev, num]
+    );
+  }, []);
+
+  const toggleLesson = useCallback((v: string) => {
+    const num = Number(v);
+    setSelectedLessons(prev =>
+      prev.includes(num) ? prev.filter(l => l !== num) : [...prev, num].sort((a, b) => a - b)
+    );
+  }, []);
+
+  const canAdd = selectedLessons.length > 0 &&
+    (weekType === "Кастом" ? customDate.length > 0 : selectedDays.length > 0);
+
+  const handleAdd = useCallback(() => {
+    if (!canAdd) return;
+    const newRules: ScheduleRule[] = [];
+
+    if (weekType === "Кастом") {
+      newRules.push({
+        id: crypto.randomUUID(),
+        type: "Кастом",
+        date: customDate,
+        lesson: selectedLessons,
+      } as CustomRule);
+    } else {
+      selectedDays.forEach(day => {
+        newRules.push({
+          id: crypto.randomUUID(),
+          type: weekType,
+          dayOfWeek: day,
+          lesson: selectedLessons,
+        } as WeeklyRule);
+      });
+    }
+
+    onAdd(newRules);
+    setSelectedDays([]);
+    setSelectedLessons([]);
+    setCustomDate("");
+  }, [canAdd, weekType, customDate, selectedDays, selectedLessons, onAdd]);
+
+  return (
+    <div className="bg-white rounded-2xl p-4 flex flex-col gap-4">
+      <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
+        Добавить занятие
       </span>
-      <span className="text-[13px] text-gray-700 font-medium flex-1">
-        {ruleLabel(rule)}
-      </span>
-      <button
-        onClick={() => onDelete(rule.id)}
-        className="w-7 h-7 rounded-lg flex items-center justify-center active:bg-red-50 transition-colors shrink-0"
+
+      {/* Тип недели */}
+      <div className="flex flex-col gap-1.5">
+        <span className="text-xs text-gray-400">Повторение</span>
+        <Segmented
+          options={WEEK_TYPES}
+          value={weekType}
+          onChange={(v) => { setWeekType(v); setSelectedDays([]); }}
+        />
+      </div>
+
+      {/* Дата или дни */}
+      {weekType === "Кастом" ? (
+        <Input
+          type="date"
+          value={customDate}
+          onChange={e => setCustomDate(e.target.value)}
+          variant="secondary"
+        />
+      ) : (
+        <div className="flex flex-col gap-1.5">
+          <span className="text-xs text-gray-400">День недели</span>
+          <Segmented
+            options={DAY_OPTIONS}
+            value=""
+            onChange={() => {}}
+            multi
+            selectedMulti={selectedDays.map(String)}
+            onToggleMulti={toggleDay}
+          />
+        </div>
+      )}
+
+      {/* Пары */}
+      <div className="flex flex-col gap-1.5">
+        <span className="text-xs text-gray-400">Пара</span>
+        <Segmented
+          options={LESSON_OPTIONS}
+          value=""
+          onChange={() => {}}
+          multi
+          selectedMulti={selectedLessons.map(String)}
+          onToggleMulti={toggleLesson}
+        />
+      </div>
+
+      <Button
+        variant="primary"
+        onPress={handleAdd}
+        isDisabled={!canAdd}
+        className="w-full"
       >
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-          <path d="M2.5 3.5H11.5M5 3.5V2.5H9V3.5M4.5 3.5V11C4.5 11.3 4.7 11.5 5 11.5H9C9.3 11.5 9.5 11.3 9.5 11V3.5"
-            stroke="#EF4444" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/>
-        </svg>
-      </button>
+        Добавить
+      </Button>
     </div>
   );
 });
-RuleRow.displayName = "RuleRow";
+AddRuleForm.displayName = "AddRuleForm";
 
-// ─── Форма ─────────────────────────────────────────────────────────────────
+// ─── Главная форма ─────────────────────────────────────────────────────────
 
 interface SubjectFormProps {
   mode: "new" | "edit";
@@ -73,19 +267,26 @@ export function SubjectForm({ mode, initial }: SubjectFormProps) {
   const [isPending, startTransition] = useTransition();
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [sheetOpen, setSheetOpen] = useState(false);
 
   const [name, setName] = useState(initial?.name ?? "");
   const [rules, setRules] = useState<ScheduleRule[]>(initial?.rules ?? []);
+  const [isDirty, setIsDirty] = useState(false);
 
   const isValid = name.trim().length > 0;
 
+  const handleNameChange = useCallback((v: string) => {
+    setName(v);
+    setIsDirty(true);
+  }, []);
+
   const handleAddRules = useCallback((newRules: ScheduleRule[]) => {
     setRules(prev => [...prev, ...newRules]);
+    setIsDirty(true);
   }, []);
 
   const handleDeleteRule = useCallback((id: string) => {
     setRules(prev => prev.filter(r => r.id !== id));
+    setIsDirty(true);
   }, []);
 
   const handleSave = useCallback(async () => {
@@ -99,12 +300,9 @@ export function SubjectForm({ mode, initial }: SubjectFormProps) {
           rules,
         });
       } else if (initial) {
-        await asyncStore.updateSubject({
-          ...initial,
-          name: name.trim(),
-          rules,
-        });
+        await asyncStore.updateSubject({ ...initial, name: name.trim(), rules });
       }
+      setIsDirty(false);
       startTransition(() => router.back());
     } finally {
       setIsSaving(false);
@@ -122,83 +320,54 @@ export function SubjectForm({ mode, initial }: SubjectFormProps) {
     }
   }, [initial, router]);
 
-  const handleBack = useCallback(() => {
-    startTransition(() => router.back());
-  }, [router]);
-
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50">
+    <div className="flex flex-col min-h-screen">
 
-      {/* Шапка */}
-      <div className="flex items-center justify-between px-4 pt-6 pb-4">
-        <button
-          onClick={handleBack}
-          className="w-9 h-9 rounded-2xl bg-white flex items-center justify-center active:scale-95 transition-transform shadow-sm"
+      {/* Кнопка назад */}
+      <Button
+        variant="tertiary"
+        className="fixed"
+        onPress={() => startTransition(() => router.back())}
+      >
+        <IconChevronLeft className="size-4" />
+        Назад
+      </Button>
+
+      {/* Кнопка сохранить — только когда isDirty */}
+      {isDirty && isValid && (
+        <Button
+          variant="primary"
+          className="fixed right-4"
+          onPress={handleSave}
+          isDisabled={isSaving || isPending}
         >
-          <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-            <path d="M11 4L6 9L11 14" stroke="#111827" strokeWidth="2"
-              strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-        </button>
+          {isSaving ? "..." : "Сохранить"}
+        </Button>
+      )}
 
-        <h1 className="text-[17px] font-bold text-gray-900">
-          {mode === "new" ? "Новая дисциплина" : "Редактировать"}
-        </h1>
+      {/* Заголовок */}
+      <h1 className="text-2xl font-medium text-center mt-12 mb-4">
+        {mode === "new" ? "Новая дисциплина" : "Редактировать"}
+      </h1>
 
-        <button
-          onClick={handleSave}
-          disabled={!isValid || isSaving || isPending}
-          className="px-3.5 py-1.5 rounded-xl bg-gray-900 text-white text-[13px] font-semibold active:scale-95 transition-all disabled:opacity-30 disabled:pointer-events-none"
-        >
-          {isSaving ? "..." : "Готово"}
-        </button>
-      </div>
-
-      <div className="flex-1 px-4 pb-10 flex flex-col gap-3">
+      <div className="flex flex-col gap-4 pb-10">
 
         {/* Название */}
-        <div className="flex flex-col gap-1.5">
-          <span className="text-[12px] font-semibold text-gray-400 uppercase tracking-wide px-1">
-            Название
-          </span>
-          <input
-            type="text"
-            value={name}
-            onChange={e => setName(e.target.value)}
-            placeholder="Например: Математический анализ"
-            autoFocus={mode === "new"}
-            className="w-full bg-white rounded-2xl px-4 py-3.5 text-[15px] text-gray-900 font-medium outline-none border-2 border-transparent focus:border-gray-200 transition-colors placeholder:text-gray-300"
-          />
-        </div>
+        <Input
+          placeholder="Например: Математический анализ"
+          value={name}
+          onChange={e => handleNameChange(e.target.value)}
+          autoFocus={mode === "new"}
+          variant="secondary"
+        />
 
-        {/* Расписание */}
-        <div className="flex flex-col gap-1.5">
-          <div className="flex items-center justify-between px-1">
-            <span className="text-[12px] font-semibold text-gray-400 uppercase tracking-wide">
+        {/* Список правил */}
+        {rules.length > 0 && (
+          <div className="flex flex-col gap-1.5">
+            <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide px-1">
               Расписание
             </span>
-            <button
-              onClick={() => setSheetOpen(true)}
-              className="text-[13px] font-semibold text-gray-900 active:opacity-60 transition-opacity"
-            >
-              + Добавить
-            </button>
-          </div>
-
-          {rules.length === 0 ? (
-            <button
-              onClick={() => setSheetOpen(true)}
-              className="bg-white rounded-2xl px-4 py-5 flex flex-col items-center gap-1.5 active:bg-gray-50 transition-colors w-full border-2 border-dashed border-gray-100"
-            >
-              <span className="text-[14px] font-medium text-gray-300">
-                Нет правил расписания
-              </span>
-              <span className="text-[12px] text-gray-400">
-                Нажмите чтобы добавить
-              </span>
-            </button>
-          ) : (
-            <div className="bg-white rounded-2xl overflow-hidden">
+            <div className="bg-white rounded-2xl px-4">
               {rules.map(rule => (
                 <RuleRow
                   key={rule.id}
@@ -207,27 +376,25 @@ export function SubjectForm({ mode, initial }: SubjectFormProps) {
                 />
               ))}
             </div>
-          )}
-        </div>
+          </div>
+        )}
 
-        {/* Удалить — только в режиме редактирования */}
+        {/* Форма добавления */}
+        <AddRuleForm onAdd={handleAddRules} />
+
+        {/* Удалить */}
         {mode === "edit" && (
-          <button
-            onClick={handleDelete}
-            disabled={isDeleting || isPending}
-            className="w-full py-3.5 rounded-2xl bg-red-50 text-red-500 text-[15px] font-semibold active:scale-[0.98] transition-all disabled:opacity-40 mt-2"
+          <Button
+            variant="danger-soft"
+            onPress={handleDelete}
+            isDisabled={isDeleting || isPending}
+            className="w-full"
           >
             {isDeleting ? "Удаление..." : "Удалить дисциплину"}
-          </button>
+          </Button>
         )}
 
       </div>
-
-      <RuleBottomSheet
-        open={sheetOpen}
-        onClose={() => setSheetOpen(false)}
-        onAdd={handleAddRules}
-      />
     </div>
   );
 }

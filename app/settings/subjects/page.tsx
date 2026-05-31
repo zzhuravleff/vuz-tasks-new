@@ -16,7 +16,6 @@ const AVATAR_COLORS = [
   { bg: "bg-accent/5", text: "text-accent" },
   { bg: "bg-success/5", text: "text-success" },
   { bg: "bg-warning/5", text: "text-warning" },
-  { bg: "bg-primary/5", text: "text-primary" },
   { bg: "bg-danger/5", text: "text-danger" },
 ];
 
@@ -24,7 +23,7 @@ const DAY_COLORS: Record<string, { bg: string; text: string; dots: string }> = {
   "Еженедельно": { bg: "bg-accent/15", text: "text-accent", dots: "bg-accent" },
   "Чёт":         { bg: "bg-success/15", text: "text-success", dots: "bg-success" },
   "Нечёт":       { bg: "bg-warning/15", text: "text-warning", dots: "bg-warning" },
-  "Кастом":      { bg: "bg-secondary/15", text: "text-secondary", dots: "bg-secondary" },
+  "Кастом":      { bg: "bg-danger/15", text: "text-danger", dots: "bg-danger" },
 };
 
 // ─── Утилиты ───────────────────────────────────────────────────────────────
@@ -57,7 +56,7 @@ function getLessonsCount(rules: ScheduleRule[]): string {
   if (weeklyCount > 0) parts.push(`${weeklyCount} ${weeklyCount === 1 ? "пара" : weeklyCount < 5 ? "пары" : "пар"} в нед.`);
   if (customCount > 0) parts.push(`${customCount} кастом${customCount === 1 ? "" : "а"}${customCount > 1 ? "ов" : ""}`);
   if (parts.length === 0) return "Расписание не добавлено";
-  return parts.join(" · ");
+  return parts.join(" • ");
 }
 
 // ─── Карточка ──────────────────────────────────────────────────────────────
@@ -84,15 +83,15 @@ const SubjectCard = memo(({ subject, colorIdx, onEdit }: SubjectCardProps) => {
       {/* Аватар + название */}
       <div className="flex items-center gap-3">
         <div
-          className={`w-11 h-11 rounded-2xl flex items-center justify-center text-[20px] font-bold shrink-0 ${avatarColor.bg} ${avatarColor.text}`}
+          className={`w-11 h-11 rounded-2xl flex items-center justify-center text-2xl font-bold shrink-0 ${avatarColor.bg} ${avatarColor.text}`}
         >
           {getSubjectInitial(subject.name)}
         </div>
         <div className="flex flex-col gap-0.5 flex-1 min-w-0">
-          <p className="text-[15px] font-medium text-black leading-snug line-clamp-2">
+          <p className="text-base font-medium text-black leading-4 line-clamp-2">
             {subject.name}
           </p>
-          <p className="text-[12px] text-gray-400">{lessonsLabel}</p>
+          <p className="text-sm text-gray-400">{lessonsLabel}</p>
         </div>
       </div>
 
@@ -112,10 +111,9 @@ const SubjectCard = memo(({ subject, colorIdx, onEdit }: SubjectCardProps) => {
           return (
             <div key={dayNum} className="flex-1 flex flex-col items-center gap-0.5">
               <div
-                className={`h-8 rounded-xl flex items-center justify-center w-full ${colors ? colors.bg : "bg-gray-100"} ${colors?.text} font-medium text-xl`}
+                className={`h-8 rounded-xl flex items-center justify-center w-full ${colors ? colors.bg : "bg-gray-100"} ${colors?.text} font-medium text-xs`}
               >
                 <span
-                  className="text-[10px] font-semibold"
                   style={colors ? { color: colors.text } : { color: "#D1D5DB" }}
                 >
                   {day}
@@ -152,7 +150,7 @@ const SubjectsSkeleton = memo(() => (
           </div>
         </div>
         <div className="flex gap-1.5">
-          {Array.from({ length: 7 }).map((_, j) => (
+          {Array.from({ length: 6 }).map((_, j) => (
             <div key={j} className="flex-1 h-8 bg-gray-100 rounded-xl" />
           ))}
         </div>
