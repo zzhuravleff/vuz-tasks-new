@@ -61,6 +61,7 @@ interface BaseTask {
   description?: string;
   status: "active" | "completed"; // overdue вычисляется, не хранится
   createdAt: string; // ISO datetime
+  completedAt?: string;
 }
 
 export interface CustomTask extends BaseTask {

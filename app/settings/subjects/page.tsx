@@ -7,6 +7,9 @@ import { useRouter } from "next/navigation";
 import { useAsyncStore } from "@/hooks/useAsyncStore";
 import { Subject, ScheduleRule } from "@/types";
 import { Button, IconChevronLeft } from "@heroui/react";
+import { asyncStore } from "@/lib/asyncStore";
+import { TrashBin } from "@gravity-ui/icons";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 // ─── Константы ─────────────────────────────────────────────────────────────
 
@@ -65,9 +68,10 @@ interface SubjectCardProps {
   subject: Subject;
   colorIdx: number;
   onEdit: (id: string) => void;
+  onDelete: (id: string) => void;
 }
 
-const SubjectCard = memo(({ subject, colorIdx, onEdit }: SubjectCardProps) => {
+const SubjectCard = memo(({ subject, colorIdx, onEdit, onDelete }: SubjectCardProps) => {
   const avatarColor = AVATAR_COLORS[colorIdx % AVATAR_COLORS.length];
   const activeDays = getActiveDays(subject.rules);
   const lessonsLabel = getLessonsCount(subject.rules);
@@ -78,21 +82,31 @@ const SubjectCard = memo(({ subject, colorIdx, onEdit }: SubjectCardProps) => {
       tabIndex={0}
       onClick={() => onEdit(subject.id)}
       onKeyDown={e => e.key === "Enter" && onEdit(subject.id)}
-      className="bg-white rounded-3xl p-4 flex flex-col gap-3 active:scale-[0.98] transition-transform cursor-pointer"
+      className="bg-white rounded-3xl p-4 flex flex-col gap-3 active:scale-[0.98] transition-transform cursor-pointer relative"
     >
-      {/* Аватар + название */}
-      <div className="flex items-center gap-3">
-        <div
-          className={`w-11 h-11 rounded-2xl flex items-center justify-center text-2xl font-bold shrink-0 ${avatarColor.bg} ${avatarColor.text}`}
+
+      <div className="flex items-center justify-between">
+        {/* Аватар + название */}
+        <div className="flex items-center gap-3 pr-8">
+          <div className={`w-11 h-11 rounded-2xl flex items-center justify-center text-2xl font-bold shrink-0 ${avatarColor.bg} ${avatarColor.text}`}>
+            {getSubjectInitial(subject.name)}
+          </div>
+          <div className="flex flex-col gap-0.5 flex-1 min-w-0">
+            <p className="text-base font-medium text-black leading-4 line-clamp-2">
+              {subject.name}
+            </p>
+            <p className="text-sm text-gray-400">{lessonsLabel}</p>
+          </div>
+        </div>
+
+        {/* Кнопка удаления */}
+        <Button
+          variant="danger-soft"
+          isIconOnly
+          onClick={e => { e.stopPropagation(); e.preventDefault(); onDelete(subject.id); }}
         >
-          {getSubjectInitial(subject.name)}
-        </div>
-        <div className="flex flex-col gap-0.5 flex-1 min-w-0">
-          <p className="text-base font-medium text-black leading-4 line-clamp-2">
-            {subject.name}
-          </p>
-          <p className="text-sm text-gray-400">{lessonsLabel}</p>
-        </div>
+          <TrashBin className="size-4" />
+        </Button>
       </div>
 
       {/* Дни */}
@@ -110,12 +124,8 @@ const SubjectCard = memo(({ subject, colorIdx, onEdit }: SubjectCardProps) => {
 
           return (
             <div key={dayNum} className="flex-1 flex flex-col items-center gap-0.5">
-              <div
-                className={`h-8 rounded-xl flex items-center justify-center w-full ${colors ? colors.bg : "bg-gray-100"} ${colors?.text} font-medium text-xs`}
-              >
-                <span
-                  style={colors ? { color: colors.text } : { color: "#D1D5DB" }}
-                >
+              <div className={`h-8 rounded-xl flex items-center justify-center w-full ${colors ? colors.bg : "bg-gray-100"} font-medium text-xs`}>
+                <span style={colors ? { color: colors.text } : { color: "#D1D5DB" }}>
                   {day}
                 </span>
               </div>
@@ -179,6 +189,10 @@ export default function SubjectsPage() {
     navigate(`/settings/subjects/${id}`);
   }, [navigate]);
 
+  const handleDelete = useCallback(async (id: string) => {
+    await asyncStore.deleteSubject(id);
+  }, []);
+
   return (
     <div className="flex flex-col min-h-screen">
 
@@ -207,26 +221,12 @@ export default function SubjectsPage() {
         {isLoading && <SubjectsSkeleton />}
 
         {!isLoading && (!data?.subjects || data.subjects.length === 0) && (
-          <div className="flex flex-col items-center justify-center gap-4 py-24">
-            <div className="w-16 h-16 rounded-3xl bg-white flex items-center justify-center">
-              <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-                <rect x="4" y="3" width="20" height="22" rx="3" stroke="#E5E7EB" strokeWidth="1.5"/>
-                <path d="M9 9H19M9 14H15" stroke="#E5E7EB" strokeWidth="1.5" strokeLinecap="round"/>
-              </svg>
-            </div>
-            <div className="flex flex-col items-center gap-1 text-center">
-              <p className="font-semibold text-black">Нет дисциплин</p>
-              <p className="text-gray-400 text-sm leading-snug">
-                Добавьте предметы чтобы создавать задачи по расписанию
-              </p>
-            </div>
-            <Button
-              variant="primary"
-              onPress={() => navigate("/settings/subjects/new")}
-            >
-              Добавить дисциплину
-            </Button>
-          </div>
+          
+          <EmptyState
+            title={"Нет дисциплин"}
+            description={"Добавьте первую дисциплину"}
+            action={{ label: "Добавить", onClick: () => navigate("/settings/subjects/new") }}
+          />
         )}
 
         {!isLoading && data?.subjects && data.subjects.length > 0 &&
@@ -236,6 +236,7 @@ export default function SubjectsPage() {
               subject={subject}
               colorIdx={idx}
               onEdit={handleEdit}
+              onDelete={handleDelete}
             />
           ))
         }

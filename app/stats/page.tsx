@@ -10,6 +10,7 @@ import { TaskList } from "@/components/tasks/TaskList";
 import { ComputedTask } from "@/types";
 import { Chip, Label, ProgressBar } from "@heroui/react";
 import { PetWidget } from "@/components/pet/PetWidget";
+import { ArchiveTaskCard } from "@/components/tasks/ArchiveTaskCard";
 
 // ─── Типы ──────────────────────────────────────────────────────────────────
 
@@ -280,17 +281,15 @@ export default function StatsPage() {
             onChange={handleArchiveTabChange}
             counts={archiveCounts}
           />
-          <TaskList
-            tasks={archiveTasks}
-            isLoading={isLoading}
-            subjectMap={subjectMap}
-            emptyTitle="Список пуст"
-            emptyDescription={
-              archiveTab === "completed" ? "Нет выполненных задач" :
-              archiveTab === "overdue"   ? "Нет просроченных задач" :
-                                          "Нет отменённых задач"
-            }
-          />
+          <div className="flex flex-col gap-2">
+            {archiveTasks.map(task => (
+              <ArchiveTaskCard
+                key={task.id}
+                task={task}
+                subjectName={subjectMap[task.type === "По расписанию" ? task.subjectId : ""]}
+              />
+            ))}
+          </div>
         </div>
 
       </main>

@@ -2,251 +2,233 @@
 
 "use client";
 
-import { useState, useCallback, useTransition, memo } from "react";
+import { useState, useCallback, useTransition, memo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Subject, ScheduleRule, WeeklyRule, CustomRule } from "@/types";
 import { asyncStore } from "@/lib/asyncStore";
 import {
-  Button,
-  Chip,
-  Input,
+  Button, Chip, Input, Label, Spinner, Tabs,
+  ToggleButton, ToggleButtonGroup, ToggleButtonGroupSeparator,
   IconChevronLeft,
 } from "@heroui/react";
+import { TrashBin } from "@gravity-ui/icons";
 
 // ─── Константы ─────────────────────────────────────────────────────────────
 
-const DAYS_SHORT = ["", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
-
 const DAYS = [
-  { value: 1, label: "Пн" },
-  { value: 2, label: "Вт" },
-  { value: 3, label: "Ср" },
-  { value: 4, label: "Чт" },
-  { value: 5, label: "Пт" },
-  { value: 6, label: "Сб" },
+  { id: 1, short: "Пн", full: "Понедельник" },
+  { id: 2, short: "Вт", full: "Вторник" },
+  { id: 3, short: "Ср", full: "Среда" },
+  { id: 4, short: "Чт", full: "Четверг" },
+  { id: 5, short: "Пт", full: "Пятница" },
+  { id: 6, short: "Сб", full: "Суббота" },
 ];
 
-const WEEK_TYPES = [
-  { value: "Еженедельно", label: "Еженед.", color: "accent"   },
-  { value: "Нечёт",       label: "Нечёт",   color: "warning"  },
-  { value: "Чёт",         label: "Чёт",     color: "success"  },
-  { value: "Кастом",      label: "Кастом",  color: "danger"   },
+const PARS = [
+  { id: 1, time: "9:00" },
+  { id: 2, time: "10:40" },
+  { id: 3, time: "12:40" },
+  { id: 4, time: "14:20" },
+  { id: 5, time: "16:20" },
+  { id: 6, time: "18:00" },
+];
+
+const TAB_ITEMS = [
+  { id: "Еженедельно", label: "Еженед." },
+  { id: "Нечёт",       label: "Нечёт"   },
+  { id: "Чёт",         label: "Чёт"     },
+  { id: "Кастом",      label: "Кастом"  },
 ] as const;
 
 type WeekTypeValue = "Еженедельно" | "Нечёт" | "Чёт" | "Кастом";
 
 const RULE_CHIP_COLOR: Record<string, "default" | "accent" | "warning" | "success" | "danger"> = {
   "Еженедельно": "accent",
-  "Нечёт":       "warning",
-  "Чёт":         "success",
+  "Нечёт":       "success",
+  "Чёт":         "warning",
   "Кастом":      "danger",
 };
 
-function ruleLabel(rule: ScheduleRule): string {
-  if (rule.type === "Кастом") {
-    const d = new Date(rule.date);
-    const months = ["янв.", "февр.", "мар.", "апр.", "мая", "июн.",
-                    "июл.", "авг.", "сент.", "окт.", "нояб.", "дек."];
-    return `${d.getDate()} ${months[d.getMonth()]} · ${rule.lesson.join(", ")} пара`;
-  }
-  const day = DAYS_SHORT[rule.dayOfWeek];
-  const type = rule.type === "Еженедельно" ? "" : ` · ${rule.type}`;
-  return `${day}${type} · ${rule.lesson.join(", ")} пара`;
-}
+// ─── Утилиты ───────────────────────────────────────────────────────────────
 
-// ─── Строка правила ────────────────────────────────────────────────────────
+const ensureLessonArray = (lesson: number | number[]): number[] => {
+  if (Array.isArray(lesson)) return lesson;
+  if (typeof lesson === "number") return [lesson];
+  return [];
+};
 
-const RuleRow = memo(({ rule, onDelete }: {
+const formatDate = (dateString: string) => {
+  const date = new Date(dateString);
+  return new Intl.DateTimeFormat("ru-RU", {
+    day: "numeric", month: "short", year: "numeric",
+  }).format(date);
+};
+
+// ─── Карточка правила ──────────────────────────────────────────────────────
+
+interface RuleCardProps {
   rule: ScheduleRule;
   onDelete: (id: string) => void;
-}) => (
-  <div className="flex items-center gap-3 py-3 border-b border-gray-100 last:border-0">
-    <Chip
-      color={RULE_CHIP_COLOR[rule.type] ?? "default"}
-      variant="soft"
-      size="sm"
-      className="shrink-0"
-    >
-      {rule.type}
-    </Chip>
-    <span className="text-sm text-black flex-1">{ruleLabel(rule)}</span>
-    <Button
-      isIconOnly
-      size="sm"
-      variant="danger-soft"
-      onPress={() => onDelete(rule.id)}
-    >
-      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-        <path
-          d="M2.5 3.5H11.5M5 3.5V2.5H9V3.5M4.5 3.5V11C4.5 11.3 4.7 11.5 5 11.5H9C9.3 11.5 9.5 11.3 9.5 11V3.5"
-          stroke="currentColor" strokeWidth="1.25"
-          strokeLinecap="round" strokeLinejoin="round"
-        />
-      </svg>
-    </Button>
-  </div>
-));
-RuleRow.displayName = "RuleRow";
-
-// ─── Сегментед контрол (кнопки-переключатели) ─────────────────────────────
-
-interface SegmentedProps<T extends string> {
-  options: readonly { value: T; label: string }[];
-  value: T;
-  onChange: (v: T) => void;
-  multi?: boolean;
-  selectedMulti?: T[];
-  onToggleMulti?: (v: T) => void;
+  isDeleting: boolean;
 }
 
-function Segmented<T extends string>({
-  options, value, onChange, multi, selectedMulti = [], onToggleMulti,
-}: SegmentedProps<T>) {
-  return (
-    <div className="flex gap-1 flex-wrap">
-      {options.map(opt => {
-        const isActive = multi
-          ? selectedMulti.includes(opt.value)
-          : value === opt.value;
+const RuleCard = memo(({ rule, onDelete, isDeleting }: RuleCardProps) => {
+  const lessons = ensureLessonArray(rule.lesson).sort((a, b) => a - b);
+  const chipColor = RULE_CHIP_COLOR[rule.type] ?? "default";
 
-        return (
+  const title = rule.type !== "Кастом"
+    ? DAYS.find(d => d.id === rule.dayOfWeek)?.full ?? ""
+    : formatDate(rule.date);
+
+  return (
+    <div className="relative flex flex-col gap-2 p-3 bg-white rounded-3xl">
+      {isDeleting && (
+        <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center z-10 rounded-3xl">
+          <Spinner size="lg" />
+        </div>
+      )}
+
+      <div className="flex items-center justify-between">
+        <span className="text-xl font-medium">{title}</span>
+        <div className="flex items-center gap-2">
+          <Chip size="lg" variant="soft" color={chipColor}>
+            {rule.type}
+          </Chip>
           <Button
-            key={opt.value}
+            isIconOnly
             size="sm"
-            variant={isActive ? "primary" : "secondary"}
-            onPress={() => multi ? onToggleMulti?.(opt.value) : onChange(opt.value)}
+            variant="danger-soft"
+            onPress={() => onDelete(rule.id)}
           >
-            {opt.label}
+            <TrashBin className="size-4" />
           </Button>
-        );
-      })}
+        </div>
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        {lessons.map(l => (
+          <Chip key={l} size="lg">{l} пара</Chip>
+        ))}
+      </div>
     </div>
   );
-}
+});
+RuleCard.displayName = "RuleCard";
 
 // ─── Форма добавления правила ──────────────────────────────────────────────
 
 interface AddRuleFormProps {
-  onAdd: (rules: ScheduleRule[]) => void;
+  onAdd: (rule: ScheduleRule) => void;
 }
-
-const LESSON_OPTIONS = [1, 2, 3, 4, 5, 6].map(l => ({
-  value: String(l) as string,
-  label: String(l),
-}));
-
-const DAY_OPTIONS = DAYS.map(d => ({
-  value: String(d.value) as string,
-  label: d.label,
-}));
 
 const AddRuleForm = memo(({ onAdd }: AddRuleFormProps) => {
   const [weekType, setWeekType] = useState<WeekTypeValue>("Еженедельно");
-  const [selectedDays, setSelectedDays] = useState<number[]>([]);
-  const [selectedLessons, setSelectedLessons] = useState<number[]>([]);
+  const [day, setDay] = useState<Set<string>>(new Set());
+  const [lessons, setLessons] = useState<Set<string>>(new Set());
   const [customDate, setCustomDate] = useState("");
 
-  const toggleDay = useCallback((v: string) => {
-    const num = Number(v);
-    setSelectedDays(prev =>
-      prev.includes(num) ? prev.filter(d => d !== num) : [...prev, num]
-    );
-  }, []);
-
-  const toggleLesson = useCallback((v: string) => {
-    const num = Number(v);
-    setSelectedLessons(prev =>
-      prev.includes(num) ? prev.filter(l => l !== num) : [...prev, num].sort((a, b) => a - b)
-    );
-  }, []);
-
-  const canAdd = selectedLessons.length > 0 &&
-    (weekType === "Кастом" ? customDate.length > 0 : selectedDays.length > 0);
+  const canAdd = lessons.size > 0 &&
+    (weekType === "Кастом" ? customDate.length > 0 : day.size > 0);
 
   const handleAdd = useCallback(() => {
     if (!canAdd) return;
-    const newRules: ScheduleRule[] = [];
+    const lessonArr = Array.from(lessons).map(Number).sort((a, b) => a - b);
 
     if (weekType === "Кастом") {
-      newRules.push({
+      onAdd({
         id: crypto.randomUUID(),
         type: "Кастом",
         date: customDate,
-        lesson: selectedLessons,
+        lesson: lessonArr,
       } as CustomRule);
     } else {
-      selectedDays.forEach(day => {
-        newRules.push({
+      // Для каждого выбранного дня создаём отдельное правило
+      Array.from(day).forEach(d => {
+        onAdd({
           id: crypto.randomUUID(),
           type: weekType,
-          dayOfWeek: day,
-          lesson: selectedLessons,
+          dayOfWeek: Number(d),
+          lesson: lessonArr,
         } as WeeklyRule);
       });
     }
 
-    onAdd(newRules);
-    setSelectedDays([]);
-    setSelectedLessons([]);
+    setDay(new Set());
+    setLessons(new Set());
     setCustomDate("");
-  }, [canAdd, weekType, customDate, selectedDays, selectedLessons, onAdd]);
+  }, [canAdd, weekType, customDate, day, lessons, onAdd]);
 
   return (
-    <div className="bg-white rounded-2xl p-4 flex flex-col gap-4">
-      <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
-        Добавить занятие
-      </span>
+    <div className="flex flex-col gap-2 bg-white p-3 rounded-3xl">
 
-      {/* Тип недели */}
-      <div className="flex flex-col gap-1.5">
-        <span className="text-xs text-gray-400">Повторение</span>
-        <Segmented
-          options={WEEK_TYPES}
-          value={weekType}
-          onChange={(v) => { setWeekType(v); setSelectedDays([]); }}
-        />
-      </div>
+      {/* Вкладки типа */}
+      <Tabs
+        onSelectionChange={t => setWeekType(t as WeekTypeValue)}
+        className="w-full"
+      >
+        <Tabs.ListContainer>
+          <Tabs.List>
+            {TAB_ITEMS.map(tab => (
+              <Tabs.Tab key={tab.id} id={tab.id}>
+                {tab.label}
+                <Tabs.Indicator />
+              </Tabs.Tab>
+            ))}
+          </Tabs.List>
+        </Tabs.ListContainer>
+      </Tabs>
 
-      {/* Дата или дни */}
-      {weekType === "Кастом" ? (
-        <Input
-          type="date"
-          value={customDate}
-          onChange={e => setCustomDate(e.target.value)}
-          variant="secondary"
-        />
+      {weekType !== "Кастом" ? (
+        <>
+          {/* Дни недели — множественный выбор */}
+          <ToggleButtonGroup
+            className="w-full"
+            selectedKeys={day}
+            onSelectionChange={keys =>
+              setDay(new Set(Array.from(keys).map(String)))
+            }
+          >
+            {DAYS.map((d, i) => (
+              <ToggleButton key={d.id} id={String(d.id)} className="flex-1">
+                {i !== 0 && <ToggleButtonGroupSeparator />}
+                {d.short}
+              </ToggleButton>
+            ))}
+          </ToggleButtonGroup>
+        </>
       ) : (
-        <div className="flex flex-col gap-1.5">
-          <span className="text-xs text-gray-400">День недели</span>
-          <Segmented
-            options={DAY_OPTIONS}
-            value=""
-            onChange={() => {}}
-            multi
-            selectedMulti={selectedDays.map(String)}
-            onToggleMulti={toggleDay}
+        <div className="flex flex-col gap-1">
+          <Label>Дата пары</Label>
+          <Input
+            type="date"
+            value={customDate}
+            onChange={e => setCustomDate(e.target.value)}
+            variant="secondary"
           />
         </div>
       )}
 
       {/* Пары */}
-      <div className="flex flex-col gap-1.5">
-        <span className="text-xs text-gray-400">Пара</span>
-        <Segmented
-          options={LESSON_OPTIONS}
-          value=""
-          onChange={() => {}}
-          multi
-          selectedMulti={selectedLessons.map(String)}
-          onToggleMulti={toggleLesson}
-        />
-      </div>
+      <ToggleButtonGroup
+        className="w-full"
+        selectionMode="multiple"
+        selectedKeys={lessons}
+        onSelectionChange={keys =>
+          setLessons(new Set(Array.from(keys).map(String)))
+        }
+      >
+        {PARS.map((par, i) => (
+          <ToggleButton key={par.id} id={String(par.id)} className="flex-1">
+            {i !== 0 && <ToggleButtonGroupSeparator />}
+            {par.id}
+          </ToggleButton>
+        ))}
+      </ToggleButtonGroup>
 
       <Button
-        variant="primary"
-        onPress={handleAdd}
-        isDisabled={!canAdd}
         className="w-full"
+        isDisabled={!canAdd}
+        onPress={handleAdd}
       >
         Добавить
       </Button>
@@ -267,26 +249,39 @@ export function SubjectForm({ mode, initial }: SubjectFormProps) {
   const [isPending, startTransition] = useTransition();
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [deletingRuleId, setDeletingRuleId] = useState<string | null>(null);
 
   const [name, setName] = useState(initial?.name ?? "");
   const [rules, setRules] = useState<ScheduleRule[]>(initial?.rules ?? []);
   const [isDirty, setIsDirty] = useState(false);
 
+  // Сортировка правил: сначала по дню недели, потом кастом по дате
+  const sortedRules = [...rules].sort((a, b) => {
+    if (a.type === "Кастом" && b.type !== "Кастом") return 1;
+    if (a.type !== "Кастом" && b.type === "Кастом") return -1;
+    if (a.type !== "Кастом" && b.type !== "Кастом") {
+      return (a.dayOfWeek ?? 0) - (b.dayOfWeek ?? 0);
+    }
+    if (a.type === "Кастом" && b.type === "Кастом") {
+      return a.date.localeCompare(b.date);
+    }
+    return 0;
+  });
+
   const isValid = name.trim().length > 0;
 
-  const handleNameChange = useCallback((v: string) => {
-    setName(v);
-    setIsDirty(true);
-  }, []);
-
-  const handleAddRules = useCallback((newRules: ScheduleRule[]) => {
-    setRules(prev => [...prev, ...newRules]);
+  const handleAddRule = useCallback((rule: ScheduleRule) => {
+    setRules(prev => [...prev, rule]);
     setIsDirty(true);
   }, []);
 
   const handleDeleteRule = useCallback((id: string) => {
-    setRules(prev => prev.filter(r => r.id !== id));
-    setIsDirty(true);
+    setDeletingRuleId(id);
+    setTimeout(() => {
+      setRules(prev => prev.filter(r => r.id !== id));
+      setDeletingRuleId(null);
+      setIsDirty(true);
+    }, 200);
   }, []);
 
   const handleSave = useCallback(async () => {
@@ -321,9 +316,9 @@ export function SubjectForm({ mode, initial }: SubjectFormProps) {
   }, [initial, router]);
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col gap-4 w-full pb-8">
 
-      {/* Кнопка назад */}
+      {/* Назад */}
       <Button
         variant="tertiary"
         className="fixed"
@@ -333,7 +328,7 @@ export function SubjectForm({ mode, initial }: SubjectFormProps) {
         Назад
       </Button>
 
-      {/* Кнопка сохранить — только когда isDirty */}
+      {/* Сохранить — только когда isDirty */}
       {isDirty && isValid && (
         <Button
           variant="primary"
@@ -341,60 +336,58 @@ export function SubjectForm({ mode, initial }: SubjectFormProps) {
           onPress={handleSave}
           isDisabled={isSaving || isPending}
         >
-          {isSaving ? "..." : "Сохранить"}
+          {isSaving ? <Spinner size="sm" color="current" /> : "Сохранить"}
         </Button>
       )}
 
-      {/* Заголовок */}
-      <h1 className="text-2xl font-medium text-center mt-12 mb-4">
-        {mode === "new" ? "Новая дисциплина" : "Редактировать"}
+      {/* Название */}
+      <h1 className="text-2xl font-medium text-center mt-12">
+        {mode === "new" ? "Новая дисциплина" : initial?.name}
       </h1>
 
-      <div className="flex flex-col gap-4 pb-10">
-
-        {/* Название */}
+      {/* Поле названия */}
+      <div className="flex flex-col gap-1">
+        <Label>Название</Label>
         <Input
-          placeholder="Например: Математический анализ"
           value={name}
-          onChange={e => handleNameChange(e.target.value)}
+          onChange={e => { setName(e.target.value); setIsDirty(true); }}
+          placeholder="Например: Математический анализ"
           autoFocus={mode === "new"}
           variant="secondary"
         />
-
-        {/* Список правил */}
-        {rules.length > 0 && (
-          <div className="flex flex-col gap-1.5">
-            <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide px-1">
-              Расписание
-            </span>
-            <div className="bg-white rounded-2xl px-4">
-              {rules.map(rule => (
-                <RuleRow
-                  key={rule.id}
-                  rule={rule}
-                  onDelete={handleDeleteRule}
-                />
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Форма добавления */}
-        <AddRuleForm onAdd={handleAddRules} />
-
-        {/* Удалить */}
-        {mode === "edit" && (
-          <Button
-            variant="danger-soft"
-            onPress={handleDelete}
-            isDisabled={isDeleting || isPending}
-            className="w-full"
-          >
-            {isDeleting ? "Удаление..." : "Удалить дисциплину"}
-          </Button>
-        )}
-
       </div>
+
+      {/* Список правил */}
+      {rules.length === 0 && (
+        <p className="text-center text-gray-400">Пока пары не добавлены...</p>
+      )}
+
+      <div className="flex flex-col gap-2">
+        {sortedRules.map(rule => (
+          <RuleCard
+            key={rule.id}
+            rule={rule}
+            onDelete={handleDeleteRule}
+            isDeleting={deletingRuleId === rule.id}
+          />
+        ))}
+      </div>
+
+      {/* Форма добавления */}
+      <AddRuleForm onAdd={handleAddRule} />
+
+      {/* Удалить дисциплину */}
+      {mode === "edit" && (
+        <Button
+          variant="danger-soft"
+          className="w-full"
+          onPress={handleDelete}
+          isDisabled={isDeleting}
+        >
+          {isDeleting ? <Spinner size="sm" color="current" /> : "Удалить дисциплину"}
+        </Button>
+      )}
+
     </div>
   );
 }

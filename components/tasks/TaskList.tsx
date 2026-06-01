@@ -2,7 +2,7 @@
 
 "use client";
 
-import { memo } from "react";
+import { memo, useMemo } from "react";
 import { ComputedTask } from "@/types";
 import { TaskCard } from "@/components/tasks/TaskCard";
 import { TaskSkeleton } from "@/components/tasks/TaskSkeleton";
@@ -13,40 +13,49 @@ import { useTransition } from "react";
 interface TaskListProps {
   tasks: ComputedTask[];
   isLoading?: boolean;
-  emptyTitle?: string;
-  emptyDescription?: string;
-  subjectMap?: Record<string, string>; // subjectId -> subjectName
+  subjectMap?: Record<string, string>;
 }
 
 export const TaskList = memo(({
   tasks,
   isLoading = false,
-  emptyTitle,
-  emptyDescription,
   subjectMap = {},
 }: TaskListProps) => {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
-  const handleAddTask = () => {
-    startTransition(() => router.push("/tasks/new"));
-  };
+  // Просроченные — только в течение 24 часов
+  const visibleTasks = useMemo(() => {
+    const now = Date.now();
+    const oneDayMs = 24 * 60 * 60 * 1000;
+
+    return tasks.filter(task => {
+      if (task.computedStatus === "overdue") {
+        const overdueMs = now - new Date(task.deadline).getTime();
+        return overdueMs <= oneDayMs;
+      }
+      return true;
+    });
+  }, [tasks]);
 
   if (isLoading) return <TaskSkeleton count={4} />;
 
-  if (tasks.length === 0) {
+  if (visibleTasks.length === 0) {
     return (
       <EmptyState
-        title={emptyTitle ?? "Задач нет"}
-        description={emptyDescription ?? "Добавьте первую задачу"}
-        action={{ label: "Создать задачу", onClick: handleAddTask }}
+        title="Всё сделано!"
+        description="Нет активных задач"
+        action={{
+          label: "Создать задачу",
+          onClick: () => startTransition(() => router.push("/tasks/new")),
+        }}
       />
     );
   }
 
   return (
     <div className="flex flex-col gap-2 w-full">
-      {tasks.map((task) => (
+      {visibleTasks.map(task => (
         <TaskCard
           key={task.id}
           task={task}

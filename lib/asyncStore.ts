@@ -167,8 +167,10 @@ class AsyncStore {
     const data = await this.load();
     await this.save({
       ...data,
-      tasks: data.tasks.map((t) =>
-        t.id === id ? { ...t, status: "completed" } : t
+      tasks: data.tasks.map(t =>
+        t.id === id
+          ? { ...t, status: "completed", completedAt: new Date().toISOString() }
+          : t
       ),
     });
   }
