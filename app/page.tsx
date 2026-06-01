@@ -6,7 +6,6 @@ import { useMemo } from "react";
 import { useAsyncStore } from "@/hooks/useAsyncStore";
 import { useTasks } from "@/hooks/useAsyncStore";
 import { TaskList } from "@/components/tasks/TaskList";
-import { PetWidget } from "@/components/pet/PetWidget";
 
 export default function HomePage() {
   const { data } = useAsyncStore();
@@ -36,8 +35,6 @@ export default function HomePage() {
           tasks={activeTasks}
           isLoading={isLoading}
           subjectMap={subjectMap}
-          emptyTitle="Нет активных задач"
-          emptyDescription="Добавьте первую задачу"
         />
       </main>
     </div>
