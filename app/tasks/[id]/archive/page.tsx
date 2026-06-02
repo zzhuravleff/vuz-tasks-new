@@ -10,7 +10,6 @@ import { computeTask } from "@/lib/scheduleUtils";
 import { ComputedTask, LESSON_TIMES } from "@/types";
 import { formatDeadline, formatDateDisplay } from "@/lib/scheduleUtils";
 import { Button, Chip, IconChevronLeft } from "@heroui/react";
-import { TaskSkeleton } from "@/components/tasks/TaskSkeleton";
 
 const InfoRow = ({ icon, label, value, bg }: {
   icon: React.ReactNode; label: string; value: string; bg: string;
@@ -34,13 +33,11 @@ export default function ArchiveTaskPage() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isCompleting, setIsCompleting] = useState(false);
   const [task, setTask] = useState<ComputedTask | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     asyncStore.getData().then(d => {
       const found = d.tasks.find(t => t.id === id);
       setTask(found ? computeTask(found) : null);
-      setIsLoading(false);
     });
   }, [id]);
 
@@ -103,15 +100,6 @@ export default function ArchiveTaskPage() {
       setIsDeleting(false);
     }
   }, [id, router]);
-
-  if (isLoading) return (
-    <div className="flex flex-col min-h-screen">
-      <div className="px-4 pt-6 pb-2">
-        <div className="h-8 w-8 bg-gray-200 rounded-xl animate-pulse" />
-      </div>
-      <div className="px-4 pt-2"><TaskSkeleton count={1} /></div>
-    </div>
-  );
 
   if (!task) return (
     <div className="flex flex-col min-h-screen items-center justify-center gap-3">
