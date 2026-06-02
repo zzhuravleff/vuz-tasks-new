@@ -11,9 +11,9 @@ import { Check, Xmark } from "@gravity-ui/icons";
 
 // ─── Свайп-обёртка ─────────────────────────────────────────────────────────
 
-const SWIPE_THRESHOLD = 200;
-const SWIPE_MAX = 200;
-const SWIPE_SENSITIVITY = 0.3;
+const SWIPE_THRESHOLD = 90;
+const SWIPE_MAX = 140;
+const SWIPE_SENSITIVITY = 0.55;
 const DEAD_ZONE = 8;
 
 const SwipeWrapper = memo(({
