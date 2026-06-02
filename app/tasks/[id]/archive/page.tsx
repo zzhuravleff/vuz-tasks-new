@@ -2,7 +2,7 @@
 
 "use client";
 
-import { useEffect, useRef, useState, useCallback, useMemo, useTransition } from "react";
+import { useEffect, useState, useCallback, useMemo, useTransition } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useAsyncStore } from "@/hooks/useAsyncStore";
 import { asyncStore } from "@/lib/asyncStore";
@@ -12,15 +12,11 @@ import { formatDeadline, formatDateDisplay } from "@/lib/scheduleUtils";
 import { Button, Chip, IconChevronLeft } from "@heroui/react";
 import { TaskSkeleton } from "@/components/tasks/TaskSkeleton";
 
-// ─── Строка инфо ───────────────────────────────────────────────────────────
-
-const InfoRow = ({ icon, label, value }: {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
+const InfoRow = ({ icon, label, value, bg }: {
+  icon: React.ReactNode; label: string; value: string; bg: string;
 }) => (
   <div className="flex items-center gap-3 py-3 border-b border-gray-50 last:border-0">
-    <div className="w-8 h-8 rounded-xl bg-gray-50 flex items-center justify-center shrink-0">
+    <div className={`w-8 h-8 rounded-xl ${bg} flex items-center justify-center shrink-0`}>
       {icon}
     </div>
     <div className="flex flex-col gap-0.5 flex-1">
@@ -30,25 +26,31 @@ const InfoRow = ({ icon, label, value }: {
   </div>
 );
 
-// ─── Страница ──────────────────────────────────────────────────────────────
-
 export default function ArchiveTaskPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const { data } = useAsyncStore();
   const [isPending, startTransition] = useTransition();
   const [isDeleting, setIsDeleting] = useState(false);
-
+  const [isCompleting, setIsCompleting] = useState(false);
   const [task, setTask] = useState<ComputedTask | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Загружаем один раз
   useEffect(() => {
     asyncStore.getData().then(d => {
       const found = d.tasks.find(t => t.id === id);
       setTask(found ? computeTask(found) : null);
       setIsLoading(false);
     });
+  }, [id]);
+
+  // Обновляем задачу при изменении store (после выполнения)
+  useEffect(() => {
+    const unsub = asyncStore.subscribe(d => {
+      const found = d.tasks.find(t => t.id === id);
+      if (found) setTask(computeTask(found));
+    });
+    return unsub;
   }, [id]);
 
   const subjectName = useMemo(() => {
@@ -63,17 +65,34 @@ export default function ArchiveTaskPage() {
   }, [task]);
 
   const completionInfo = useMemo(() => {
-    if (!task || !task.completedAt) return null;
-    const completed = new Date(task.completedAt);
-    const dead = new Date(task.deadline);
-    const inTime = completed <= dead;
-    const months = ["янв.", "февр.", "мар.", "апр.", "мая", "июн.",
-                    "июл.", "авг.", "сент.", "окт.", "нояб.", "дек."];
-    const h = String(completed.getHours()).padStart(2, "0");
-    const m = String(completed.getMinutes()).padStart(2, "0");
-    const label = `${completed.getDate()} ${months[completed.getMonth()]} ${completed.getFullYear()}, ${h}:${m}`;
-    return { label, inTime };
+    if (!task) return null;
+
+    // Для выполненных — фактическое время
+    if (task.completedAt) {
+      const completed = new Date(task.completedAt);
+      const dead = new Date(task.deadline);
+      const inTime = completed <= dead;
+      const months = ["янв.", "февр.", "мар.", "апр.", "мая", "июн.",
+                      "июл.", "авг.", "сент.", "окт.", "нояб.", "дек."];
+      const h = String(completed.getHours()).padStart(2, "0");
+      const m = String(completed.getMinutes()).padStart(2, "0");
+      return {
+        label: `${completed.getDate()} ${months[completed.getMonth()]} ${completed.getFullYear()}, ${h}:${m}`,
+        inTime,
+        isCompleted: true,
+      };
+    }
+    return null;
   }, [task]);
+
+  const handleComplete = useCallback(async () => {
+    setIsCompleting(true);
+    try {
+      await asyncStore.completeTask(id);
+    } finally {
+      setIsCompleting(false);
+    }
+  }, [id]);
 
   const handleDelete = useCallback(async () => {
     setIsDeleting(true);
@@ -101,11 +120,11 @@ export default function ArchiveTaskPage() {
     </div>
   );
 
+  const isOverdue = task.computedStatus === "overdue";
   const isCompleted = task.computedStatus === "completed";
 
   return (
     <div className="flex flex-col min-h-screen">
-
       <Button
         variant="tertiary"
         className="fixed"
@@ -115,22 +134,19 @@ export default function ArchiveTaskPage() {
         Назад
       </Button>
 
-      {/* Статус по центру */}
-      <div className="flex justify-center mt-12 mb-2">
-        {isCompleted
-          ? <Chip color="success" variant="soft" size="lg">Выполнено</Chip>
-          : <Chip color="danger" variant="soft" size="lg">Просрочено</Chip>
-        }
-      </div>
+      <h1 className="text-2xl font-medium text-center mt-12 pb-2">Задача</h1>
 
-      <div className="flex flex-col gap-3 px-4 pb-10">
+      <div className="flex flex-col gap-3 pb-10">
 
         {/* Основная карточка */}
-        <div className="bg-white rounded-3xl p-4 flex flex-col gap-3">
-          <div className="flex items-center justify-between">
-            <span className="text-[12px] text-gray-400 font-medium">
+        <div className={`bg-white rounded-3xl p-4 flex flex-col gap-3 ${isOverdue ? "border-2 border-danger/16" : ""}`}>
+          <div className="w-full flex gap-2 justify-start">
+            <Chip color="danger" size="lg" variant="soft" className={`${task.computedStatus === "overdue" ? "" : "hidden"}`}>
+              Просрочено
+            </Chip>
+            <Chip size="lg" color="default" variant="soft">
               {task.type === "По расписанию" ? "По расписанию" : "Кастомная задача"}
-            </span>
+            </Chip>
           </div>
 
           <p className="text-[20px] font-semibold text-black leading-snug">
@@ -158,17 +174,24 @@ export default function ArchiveTaskPage() {
             }
             label="Дедлайн"
             value={formatDeadline(task.deadline)}
+            bg="bg-gray-100"
           />
 
+          {/* Время выполнения — для всех у кого есть completedAt */}
           {completionInfo && (
             <InfoRow
               icon={
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                  <path d="M2.5 8L6 11.5L13.5 4.5" stroke={completionInfo.inTime ? "#16A34A" : "#CA8A04"} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path
+                    d="M2.5 8L6 11.5L13.5 4.5"
+                    stroke={completionInfo.inTime ? "#16A34A" : "#CA8A04"}
+                    strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"
+                  />
                 </svg>
               }
               label={completionInfo.inTime ? "Выполнено в срок" : "Выполнено с опозданием"}
               value={completionInfo.label}
+              bg={completionInfo.inTime ? "bg-success/15" : "bg-warning/15"}
             />
           )}
 
@@ -183,6 +206,7 @@ export default function ArchiveTaskPage() {
               }
               label="Предмет"
               value={subjectName}
+              bg="bg-gray-100"
             />
           )}
 
@@ -196,6 +220,7 @@ export default function ArchiveTaskPage() {
               }
               label="Пара"
               value={lessonTime}
+              bg="bg-gray-100"
             />
           )}
 
@@ -208,15 +233,27 @@ export default function ArchiveTaskPage() {
             }
             label="Создана"
             value={formatDateDisplay(task.createdAt)}
+            bg="bg-gray-100"
           />
         </div>
 
-        {/* Удалить */}
+        {/* Выполнить — только для просроченных */}
+        {isOverdue && (
+          <Button
+            variant="primary"
+            className="w-full"
+            onPress={handleComplete}
+            isDisabled={isCompleting || isPending}
+          >
+            {isCompleting ? "..." : "Выполнить"}
+          </Button>
+        )}
+
         <Button
           variant="danger-soft"
           className="w-full"
           onPress={handleDelete}
-          isDisabled={isDeleting}
+          isDisabled={isDeleting || isPending}
         >
           Удалить задачу
         </Button>
@@ -224,4 +261,4 @@ export default function ArchiveTaskPage() {
       </div>
     </div>
   );
-}
+};

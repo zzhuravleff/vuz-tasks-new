@@ -223,7 +223,7 @@ export default function TaskDetailPage() {
 
         {/* Основная карточка */}
         <div className={`bg-white rounded-3xl p-4 flex flex-col gap-3 ${task.computedStatus === "overdue" ? "border-danger/16 border-2" : ""}`}>
-          <div className="w-full flex justify-start">
+          <div className={`w-full flex justify-start ${task.computedStatus === "overdue" ? "" : "hidden"}`}>
             <Chip color="danger" size="lg" variant="soft">
               Просрочено
             </Chip>

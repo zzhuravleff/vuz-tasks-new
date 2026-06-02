@@ -69,7 +69,7 @@ interface ConfirmResetModalProps {
 }
 
 const ConfirmResetModal = memo(({ onConfirm, onCancel }: ConfirmResetModalProps) => (
-  <div className="fixed inset-0 z-[60] flex items-end justify-center">
+  <div className="fixed inset-0 z-60 flex items-end justify-center">
     <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onCancel} />
     <div className="relative bg-white rounded-t-3xl w-full max-w-lg p-6 flex flex-col gap-2">
       <div className="flex flex-col gap-1.5 text-center">

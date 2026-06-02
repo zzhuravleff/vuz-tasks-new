@@ -8,13 +8,13 @@ import { useTasks } from "@/hooks/useAsyncStore";
 import { useWeekInfo } from "@/hooks/useSchedule";
 import { TaskList } from "@/components/tasks/TaskList";
 import { ComputedTask } from "@/types";
-import { Chip, Label, ProgressBar } from "@heroui/react";
+import { Chip, Label, ProgressBar, Tabs } from "@heroui/react";
 import { PetWidget } from "@/components/pet/PetWidget";
 import { ArchiveTaskCard } from "@/components/tasks/ArchiveTaskCard";
 
 // ─── Типы ──────────────────────────────────────────────────────────────────
 
-type ArchiveTab = "completed" | "overdue";
+type ArchiveTab = "all" | "completed" | "overdue";
 
 // ─── Карточка цифры ────────────────────────────────────────────────────────
 
@@ -136,7 +136,7 @@ export default function StatsPage() {
   const { data, isLoading } = useAsyncStore();
   const { tasks } = useTasks();
   const weekInfo = useWeekInfo();
-  const [archiveTab, setArchiveTab] = useState<ArchiveTab>("completed");
+  const [archiveTab, setArchiveTab] = useState<ArchiveTab>("all");
 
   const handleArchiveTabChange = useCallback((tab: ArchiveTab) => {
     setArchiveTab(tab);
@@ -193,13 +193,33 @@ export default function StatsPage() {
 
   // ── Архивные задачи ────────────────────────────────────────────────────
 
-  const archiveTasks = useMemo((): ComputedTask[] => {
-    return tasks.filter((t) => t.computedStatus === archiveTab);
+  const archiveTasks = useMemo(() => {
+    const filtered =
+      archiveTab === "all"
+        ? tasks.filter(
+            t =>
+              t.computedStatus === "completed" ||
+              t.computedStatus === "overdue"
+          )
+        : tasks.filter(t => t.computedStatus === archiveTab);
+
+    return [...filtered].sort((a, b) => {
+      const getSortTime = (task: ComputedTask) => {
+        if (task.computedStatus === "completed" && task.completedAt) {
+          return new Date(task.completedAt).getTime();
+        }
+
+        return new Date(task.deadline).getTime();
+      };
+
+      return getSortTime(b) - getSortTime(a);
+    });
   }, [tasks, archiveTab]);
 
   const archiveCounts = useMemo(() => ({
-    completed: tasks.filter((t) => t.computedStatus === "completed").length,
-    overdue:   tasks.filter((t) => t.computedStatus === "overdue").length,
+    all:       tasks.filter(t => t.computedStatus === "completed" || t.computedStatus === "overdue").length,
+    completed: tasks.filter(t => t.computedStatus === "completed").length,
+    overdue:   tasks.filter(t => t.computedStatus === "overdue").length,
   }), [tasks]);
 
   return (
@@ -274,22 +294,48 @@ export default function StatsPage() {
         {/* ── Архив ─────────────────────────────────────────────────── */}
         <div className="flex flex-col gap-2">
           <span className="text-lg text-center font-medium text-gray-400 uppercase tracking-wide w-full">
-            Архив
+            Архив задач
           </span>
-          <ArchiveTabs
-            active={archiveTab}
-            onChange={handleArchiveTabChange}
-            counts={archiveCounts}
-          />
-          <div className="flex flex-col gap-2">
-            {archiveTasks.map(task => (
-              <ArchiveTaskCard
-                key={task.id}
-                task={task}
-                subjectName={subjectMap[task.type === "По расписанию" ? task.subjectId : ""]}
-              />
-            ))}
-          </div>
+
+          <Tabs
+            onSelectionChange={t => setArchiveTab(t as ArchiveTab)}
+            className="w-full"
+          >
+            <Tabs.ListContainer>
+              <Tabs.List>
+                <Tabs.Tab id="all">
+                  Все{/*  · {archiveCounts.all} */}
+                  <Tabs.Indicator />
+                </Tabs.Tab>
+                <Tabs.Tab id="completed">
+                  Выполнено{/*  · {archiveCounts.completed} */}
+                  <Tabs.Indicator />
+                </Tabs.Tab>
+                <Tabs.Tab id="overdue">
+                  Просрочено{/*  · {archiveCounts.overdue} */}
+                  <Tabs.Indicator />
+                </Tabs.Tab>
+              </Tabs.List>
+            </Tabs.ListContainer>
+          </Tabs>
+
+          {archiveTasks.length === 0 ? (
+            <p className="text-center text-gray-400 py-8">Список пуст</p>
+          ) : (
+            <div className="flex flex-col gap-2">
+              {archiveTasks.map(task => (
+                <ArchiveTaskCard
+                  key={task.id}
+                  task={task}
+                  subjectName={
+                    task.type === "По расписанию"
+                      ? subjectMap[task.subjectId]
+                      : undefined
+                  }
+                />
+              ))}
+            </div>
+          )}
         </div>
 
       </main>

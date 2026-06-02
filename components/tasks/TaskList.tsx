@@ -24,10 +24,10 @@ export const TaskList = memo(({
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
-  // Просроченные — только в течение 24 часов
+  // Просроченные — только в течение 36 часов
   const visibleTasks = useMemo(() => {
     const now = Date.now();
-    const oneDayMs = 24 * 60 * 60 * 1000;
+    const oneDayMs = 36 * 60 * 60 * 1000;
 
     return tasks.filter(task => {
       if (task.computedStatus === "overdue") {
