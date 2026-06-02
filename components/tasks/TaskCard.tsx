@@ -12,8 +12,10 @@ import { Check, Xmark } from "@gravity-ui/icons";
 
 // ─── Свайп-обёртка ─────────────────────────────────────────────────────────
 
-const SWIPE_THRESHOLD = 72;
-const SWIPE_MAX = 96;
+const SWIPE_THRESHOLD = 200; //72
+const SWIPE_MAX = 200; //96
+const SWIPE_SENSITIVITY = 0.3; // чем меньше — тем "тяжелее" свайп
+const DEAD_ZONE = 8;
 
 const SwipeWrapper = memo(({
   children, onComplete, onDelete, disabled,
@@ -37,15 +39,31 @@ const SwipeWrapper = memo(({
     setIsAnimating(false);
   }, [disabled]);
 
+  const applyRubber = (x: number) => {
+    const sign = Math.sign(x);
+    const abs = Math.max(0, Math.abs(x) - DEAD_ZONE);
+
+    return sign * Math.pow(abs, 0.85) * 6;
+  };
+
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
     if (!isDragging.current || disabled) return;
+
     const diff = e.touches[0].clientX - startX.current;
     currentX.current = diff;
-    const clamped = Math.max(-SWIPE_MAX, Math.min(SWIPE_MAX, diff));
-    const rubber = clamped > 0
-      ? Math.min(clamped, SWIPE_THRESHOLD + (clamped - SWIPE_THRESHOLD) * 0.3)
-      : Math.max(clamped, -SWIPE_THRESHOLD + (clamped + SWIPE_THRESHOLD) * 0.3);
-    setOffset(rubber);
+
+    // 1. dead zone
+    if (Math.abs(diff) < DEAD_ZONE) return;
+
+    // 2. sensitivity
+    const scaled = diff * SWIPE_SENSITIVITY;
+
+    // 3. nonlinear feel
+    const offset = applyRubber(scaled);
+
+    const clamped = Math.max(-SWIPE_MAX, Math.min(SWIPE_MAX, offset));
+
+    setOffset(clamped);
   }, [disabled]);
 
   const handleTouchEnd = useCallback(() => {

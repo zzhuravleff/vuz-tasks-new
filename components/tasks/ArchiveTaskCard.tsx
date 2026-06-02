@@ -11,11 +11,16 @@ import { Check, Xmark } from "@gravity-ui/icons";
 
 // ─── Свайп-обёртка ─────────────────────────────────────────────────────────
 
-const SWIPE_THRESHOLD = 72;
-const SWIPE_MAX = 96;
+const SWIPE_THRESHOLD = 200;
+const SWIPE_MAX = 200;
+const SWIPE_SENSITIVITY = 0.3;
+const DEAD_ZONE = 8;
 
 const SwipeWrapper = memo(({
-  children, onDelete, onComplete, canComplete,
+  children,
+  onDelete,
+  onComplete,
+  canComplete,
 }: {
   children: React.ReactNode;
   onDelete: () => void;
@@ -25,6 +30,7 @@ const SwipeWrapper = memo(({
   const startX = useRef(0);
   const currentX = useRef(0);
   const isDragging = useRef(false);
+
   const [offset, setOffset] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
 
@@ -36,25 +42,47 @@ const SwipeWrapper = memo(({
 
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
     if (!isDragging.current) return;
+
     const diff = e.touches[0].clientX - startX.current;
     currentX.current = diff;
 
-    // Свайп вправо только если canComplete
+    // ── DEAD ZONE ─────────────────────────────
+    if (Math.abs(diff) < DEAD_ZONE) return;
+
+    // ── запрет свайпа вправо если нельзя выполнить ─
     if (diff > 0 && !canComplete) return;
 
-    const clamped = Math.max(-SWIPE_MAX, Math.min(SWIPE_MAX, diff));
-    const rubber = clamped > 0
-      ? Math.min(clamped, SWIPE_THRESHOLD + (clamped - SWIPE_THRESHOLD) * 0.3)
-      : Math.max(clamped, -SWIPE_THRESHOLD + (clamped + SWIPE_THRESHOLD) * 0.3);
-    setOffset(rubber);
+    // ── SENSITIVITY ───────────────────────────
+    const scaled = diff * SWIPE_SENSITIVITY;
+
+    // ── RUBBER (нелинейная кривая) ────────────
+    const sign = Math.sign(scaled);
+    const abs = Math.abs(scaled);
+
+    const rubber =
+      sign *
+      Math.pow(Math.max(0, abs - DEAD_ZONE), 0.85) *
+      6;
+
+    const clamped = Math.max(-SWIPE_MAX, Math.min(SWIPE_MAX, rubber));
+
+    setOffset(clamped);
   }, [canComplete]);
 
   const handleTouchEnd = useCallback(() => {
     if (!isDragging.current) return;
+
     isDragging.current = false;
     setIsAnimating(true);
-    if (currentX.current >= SWIPE_THRESHOLD && canComplete) onComplete?.();
-    else if (currentX.current <= -SWIPE_THRESHOLD) onDelete();
+
+    const x = currentX.current;
+
+    if (x >= SWIPE_THRESHOLD && canComplete) {
+      onComplete?.();
+    } else if (x <= -SWIPE_THRESHOLD) {
+      onDelete();
+    }
+
     setOffset(0);
   }, [canComplete, onComplete, onDelete]);
 
