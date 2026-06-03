@@ -32,7 +32,21 @@ const SwipeWrapper = memo(({
 
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     if (disabled) return;
-    startX.current = e.touches[0].clientX;
+
+    const card = cardRef.current;
+    if (!card) return;
+
+    const touch = e.touches[0];
+    const rect = card.getBoundingClientRect();
+    const edgeZone = rect.width * 0.2; // 20% с каждого края
+
+    const fromLeft = touch.clientX - rect.left;
+    const fromRight = rect.right - touch.clientX;
+
+    // Свайп только если начато с края
+    if (fromLeft > edgeZone && fromRight > edgeZone) return;
+
+    startX.current = touch.clientX;
     isDragging.current = true;
     setIsAnimating(false);
   }, [disabled]);
@@ -58,7 +72,7 @@ const SwipeWrapper = memo(({
   }, [disabled, onComplete, onDelete]);
 
   return (
-    <div className="relative overflow-hidden rounded-3xl">
+    <div className="relative overflow-hidden rounded-3xl" ref={cardRef}>
       <div className={`absolute inset-0 rounded-3xl bg-success flex items-center px-5 transition-opacity duration-150 ${offset > 20 ? "opacity-100" : "opacity-0"}`}>
         <Check className="size-8 text-white" />
       </div>
@@ -66,7 +80,6 @@ const SwipeWrapper = memo(({
         <Xmark className="size-8 text-white" />
       </div>
       <div
-        ref={cardRef}
         style={{
           transform: `translateX(${offset}px)`,
           transition: isAnimating ? "transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)" : "none",
