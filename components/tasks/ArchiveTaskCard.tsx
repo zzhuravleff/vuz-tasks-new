@@ -25,11 +25,24 @@ const SwipeWrapper = memo(({
   const startX = useRef(0);
   const currentX = useRef(0);
   const isDragging = useRef(false);
+  const cardRef = useRef<HTMLDivElement>(null);
   const [offset, setOffset] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
 
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    startX.current = e.touches[0].clientX;
+    const card = cardRef.current;
+    if (!card) return;
+
+    const touch = e.touches[0];
+    const rect = card.getBoundingClientRect();
+    const edgeZone = rect.width * 0.2;
+
+    const fromLeft = touch.clientX - rect.left;
+    const fromRight = rect.right - touch.clientX;
+
+    if (fromLeft > edgeZone && fromRight > edgeZone) return;
+
+    startX.current = touch.clientX;
     isDragging.current = true;
     setIsAnimating(false);
   }, []);
@@ -39,7 +52,6 @@ const SwipeWrapper = memo(({
     const diff = e.touches[0].clientX - startX.current;
     currentX.current = diff;
 
-    // Свайп вправо только если canComplete
     if (diff > 0 && !canComplete) return;
 
     const clamped = Math.max(-SWIPE_MAX, Math.min(SWIPE_MAX, diff));
@@ -59,14 +71,12 @@ const SwipeWrapper = memo(({
   }, [canComplete, onComplete, onDelete]);
 
   return (
-    <div className="relative overflow-hidden rounded-3xl">
-      {/* Вправо — выполнить (только для просроченных) */}
+    <div className="relative overflow-hidden rounded-3xl" ref={cardRef}>
       {canComplete && (
         <div className={`absolute inset-0 rounded-3xl bg-success flex items-center px-5 transition-opacity duration-150 ${offset > 20 ? "opacity-100" : "opacity-0"}`}>
           <Check className="size-8 text-white" />
         </div>
       )}
-      {/* Влево — удалить */}
       <div className={`absolute inset-0 rounded-3xl bg-danger flex items-center justify-end px-5 transition-opacity duration-150 ${offset < -20 ? "opacity-100" : "opacity-0"}`}>
         <Xmark className="size-8 text-white" />
       </div>
