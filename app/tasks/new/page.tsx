@@ -5,73 +5,15 @@
 import { useState, useCallback, useMemo, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useAsyncStore } from "@/hooks/useAsyncStore";
-import { useUpcomingSlots } from "@/hooks/useSchedule";
 import { asyncStore } from "@/lib/asyncStore";
-import { formatDateDisplay, formatDateToISO, getLessonSlots } from "@/lib/scheduleUtils";
+import { formatDateDisplay, getLessonSlots } from "@/lib/scheduleUtils";
 import { LESSON_TIMES, CustomTask, ScheduleTask, LessonSlot } from "@/types";
 import { TaskSkeleton } from "@/components/tasks/TaskSkeleton";
-
-// ─── Утилиты ───────────────────────────────────────────────────────────────
-
-function generateId(): string {
-  return crypto.randomUUID();
-}
-
-// ─── Типы вкладок ──────────────────────────────────────────────────────────
-
-type TabType = "Кастомная" | "По расписанию";
-
-// ─── Компонент вкладок ─────────────────────────────────────────────────────
-
-interface TabSwitcherProps {
-  active: TabType;
-  onChange: (tab: TabType) => void;
-}
-
-const TabSwitcher = ({ active, onChange }: TabSwitcherProps) => (
-  <div className="flex bg-gray-100 rounded-2xl p-1 gap-1">
-    {(["Кастомная", "По расписанию"] as TabType[]).map((tab) => (
-      <button
-        key={tab}
-        onClick={() => onChange(tab)}
-        className={`
-          flex-1 py-2 rounded-xl text-[13px] font-semibold
-          transition-all duration-200 active:scale-[0.97]
-          ${active === tab
-            ? "bg-white text-black shadow-sm"
-            : "text-gray-400"
-          }
-        `}
-      >
-        {tab}
-      </button>
-    ))}
-  </div>
-);
-
-// ─── Поле ввода ────────────────────────────────────────────────────────────
-
-interface FieldProps {
-  label: string;
-  children: React.ReactNode;
-}
-
-const Field = ({ label, children }: FieldProps) => (
-  <div className="flex flex-col gap-1.5">
-    <span className="text-[12px] font-semibold text-gray-400 uppercase tracking-wide px-1">
-      {label}
-    </span>
-    {children}
-  </div>
-);
-
-const inputClass = `
-  w-full bg-white rounded-2xl px-4 py-3.5
-  text-[15px] text-black font-medium
-  outline-none border-2 border-transparent
-  focus:border-gray-200 transition-colors
-  placeholder:text-gray-300
-`;
+import {
+  Button, Input, TextArea, Tabs, Label,
+  IconChevronLeft, Description, Header,
+  Select, ListBox,
+} from "@heroui/react";
 
 // ─── Форма кастомной задачи ────────────────────────────────────────────────
 
@@ -90,7 +32,7 @@ const CustomForm = ({ onSubmit, isSubmitting }: CustomFormProps) => {
   const handleSubmit = useCallback(() => {
     if (!isValid) return;
     onSubmit({
-      id: generateId(),
+      id: crypto.randomUUID(),
       type: "Кастомная",
       title: title.trim(),
       description: description.trim() || undefined,
@@ -102,41 +44,46 @@ const CustomForm = ({ onSubmit, isSubmitting }: CustomFormProps) => {
 
   return (
     <div className="flex flex-col gap-4">
-      <Field label="Название">
-        <input
-          type="text"
+      <div className="flex flex-col gap-1">
+        <Label>Название</Label>
+        <Input
           value={title}
-          onChange={(e) => setTitle(e.target.value)}
+          onChange={e => setTitle(e.target.value)}
           placeholder="Что нужно сделать?"
-          className={inputClass}
+          variant="secondary"
           autoFocus
         />
-      </Field>
+      </div>
 
-      <Field label="Описание">
-        <textarea
+      <div className="flex flex-col gap-1">
+        <Label>Описание</Label>
+        <TextArea
           value={description}
-          onChange={(e) => setDescription(e.target.value)}
+          onChange={e => setDescription(e.target.value)}
           placeholder="Подробности (необязательно)"
+          variant="secondary"
           rows={3}
-          className={`${inputClass} resize-none`}
         />
-      </Field>
+      </div>
 
-      <Field label="Дедлайн">
-        <input
+      <div className="flex flex-col gap-1">
+        <Label>Дедлайн</Label>
+        <Input
           type="datetime-local"
           value={deadline}
-          onChange={(e) => setDeadline(e.target.value)}
-          className={inputClass}
+          onChange={e => setDeadline(e.target.value)}
+          variant="secondary"
         />
-      </Field>
+      </div>
 
-      <SubmitButton
-        onSubmit={handleSubmit}
-        disabled={!isValid || isSubmitting}
-        isSubmitting={isSubmitting}
-      />
+      <Button
+        variant="primary"
+        className="w-full"
+        onPress={handleSubmit}
+        isDisabled={!isValid || isSubmitting}
+      >
+        {isSubmitting ? "Сохранение..." : "Создать задачу"}
+      </Button>
     </div>
   );
 };
@@ -154,19 +101,34 @@ const ScheduleForm = ({ onSubmit, isSubmitting }: ScheduleFormProps) => {
   const [selectedSlot, setSelectedSlot] = useState<LessonSlot | null>(null);
   const [description, setDescription] = useState("");
 
-  // Пары выбранной дисциплины (ближайшие 60 дней)
   const subjectSlots = useMemo(() => {
     if (!data || !selectedSubjectId) return [];
-    const subject = data.subjects.find((s) => s.id === selectedSubjectId);
+    const subject = data.subjects.find(s => s.id === selectedSubjectId);
     if (!subject) return [];
 
-    const from = new Date();
-    const to = new Date();
-    to.setDate(to.getDate() + 60);
+    const now = new Date();
+
+    // Начало семестра
+    const semesterStart = new Date(data.semester.startDate);
+
+    // Конец семестра
+    const semesterEnd = new Date(data.semester.startDate);
+    semesterEnd.setDate(semesterEnd.getDate() + data.semester.weeks * 7 - 1);
+
+    // from = сегодня или начало семестра (что позже)
+    const from = now > semesterStart ? now : semesterStart;
+
+    // to = через 60 дней или конец семестра (что раньше)
+    const maxTo = new Date(now);
+    maxTo.setDate(maxTo.getDate() + 60);
+    const to = maxTo < semesterEnd ? maxTo : semesterEnd;
+
+    // Если семестр уже закончился или ещё не начался — нет пар
+    if (from > to) return [];
+
     return getLessonSlots(subject, from, to, data.semester) as LessonSlot[];
   }, [data, selectedSubjectId]);
 
-  // Группируем слоты по дате
   const slotsByDate = useMemo(() => {
     const map = new Map<string, LessonSlot[]>();
     for (const slot of subjectSlots) {
@@ -186,7 +148,7 @@ const ScheduleForm = ({ onSubmit, isSubmitting }: ScheduleFormProps) => {
   const handleSubmit = useCallback(() => {
     if (!isValid || !selectedSlot) return;
     onSubmit({
-      id: generateId(),
+      id: crypto.randomUUID(),
       type: "По расписанию",
       description: description.trim() || undefined,
       subjectId: selectedSlot.subjectId,
@@ -202,11 +164,9 @@ const ScheduleForm = ({ onSubmit, isSubmitting }: ScheduleFormProps) => {
 
   if (!data?.subjects.length) {
     return (
-      <div className="bg-white rounded-3xl p-6 text-center">
+      <div className="bg-white rounded-3xl p-6 text-center flex flex-col gap-1">
         <p className="text-gray-400 text-[14px]">Нет дисциплин</p>
-        <p className="text-gray-300 text-[13px] mt-1">
-          Добавьте дисциплины в настройках
-        </p>
+        <p className="text-gray-300 text-[13px]">Добавьте дисциплины в настройках</p>
       </div>
     );
   }
@@ -214,131 +174,117 @@ const ScheduleForm = ({ onSubmit, isSubmitting }: ScheduleFormProps) => {
   return (
     <div className="flex flex-col gap-4">
 
-      <Field label="Описание">
-        <textarea
+      <div className="flex flex-col gap-1">
+        <Label>Описание</Label>
+        <TextArea
           value={description}
-          onChange={(e) => setDescription(e.target.value)}
+          onChange={e => setDescription(e.target.value)}
           placeholder="Подробности (необязательно)"
+          variant="secondary"
           rows={3}
-          className={`${inputClass} resize-none`}
         />
-      </Field>
+      </div>
 
       {/* Выбор дисциплины */}
-      <Field label="Дисциплина">
-        <div className="flex flex-col gap-2">
-          {data.subjects.map((subject) => (
-            <button
-              key={subject.id}
-              onClick={() => handleSubjectChange(subject.id)}
-              className={`
-                w-full text-left px-4 py-3.5 rounded-2xl
-                text-[15px] font-medium transition-all duration-150
-                active:scale-[0.98]
-                ${selectedSubjectId === subject.id
-                  ? "bg-black text-white"
-                  : "bg-white text-gray-700"
-                }
-              `}
-            >
-              {subject.name}
-            </button>
-          ))}
-        </div>
-      </Field>
-
-      {/* Выбор пары */}
-      {selectedSubjectId && (
-        <Field label="Пара">
-          {subjectSlots.length === 0 ? (
-            <div className="bg-white rounded-2xl px-4 py-3.5 text-[14px] text-gray-400">
-              Нет предстоящих пар
-            </div>
-          ) : (
-            <div className="flex flex-col gap-2">
-              {Array.from(slotsByDate.entries()).map(([date, slots]) => (
-                <div key={date} className="flex flex-col gap-1.5">
-                  {/* Дата */}
-                  <span className="text-[12px] font-semibold text-gray-400 px-1">
-                    {formatDateDisplay(date)}
-                  </span>
-                  {/* Слоты этой даты */}
-                  {slots.map((slot) => {
-                    const time = LESSON_TIMES[slot.lessonNumber];
-                    const isSelected =
-                      selectedSlot?.lessonDate === slot.lessonDate &&
-                      selectedSlot?.lessonNumber === slot.lessonNumber;
-
-                    return (
-                      <button
-                        key={`${slot.lessonDate}-${slot.lessonNumber}`}
-                        onClick={() => setSelectedSlot(slot)}
-                        className={`
-                          w-full text-left px-4 py-3 rounded-2xl
-                          transition-all duration-150 active:scale-[0.98]
-                          ${isSelected
-                            ? "bg-black text-white"
-                            : "bg-white text-gray-700"
-                          }
-                        `}
-                      >
-                        <div className="flex items-center justify-between">
-                          <span className="text-[15px] font-medium">
-                            {slot.lessonNumber} пара
-                          </span>
-                          <span className={`text-[13px] ${isSelected ? "text-gray-300" : "text-gray-400"}`}>
-                            {time.start} – {time.end}
-                          </span>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
+      <div className="flex flex-col gap-1">
+        <Label>Дисциплина</Label>
+        <Select
+          selectedKey={selectedSubjectId}
+          onSelectionChange={key => handleSubjectChange(key as string)}
+          placeholder="Выберите дисциплину"
+          variant="secondary"
+          aria-label="Выбирите дисциплину"
+        >
+          <Select.Trigger>
+            <Select.Value />
+            <Select.Indicator />
+          </Select.Trigger>
+          <Select.Popover>
+            <ListBox>
+              {data.subjects.map(subject => (
+                <ListBox.Item key={subject.id} id={subject.id} textValue={subject.name}>
+                  <Label>{subject.name}</Label>
+                  <ListBox.ItemIndicator />
+                </ListBox.Item>
               ))}
-            </div>
+            </ListBox>
+          </Select.Popover>
+        </Select>
+      </div>
+
+      {/* Выбор пары — появляется после выбора дисциплины */}
+      {selectedSubjectId && (
+        <div className="flex flex-col gap-1">
+          <Label>Пара</Label>
+          {subjectSlots.length === 0 ? (
+            <p className="text-[14px] text-gray-400 px-1">Нет предстоящих пар</p>
+          ) : (
+            <Select
+              variant="secondary"
+              aria-label="Выберите пару"
+              selectedKey={
+                selectedSlot
+                  ? `${selectedSlot.lessonDate}-lesson-${selectedSlot.lessonNumber}`
+                  : null
+              }
+              onSelectionChange={key => {
+                if (!key) { setSelectedSlot(null); return; }
+                const str = key as string;
+                const sepIdx = str.indexOf("-lesson-");
+                const date = str.slice(0, sepIdx);
+                const num = Number(str.slice(sepIdx + 8));
+                const slot = subjectSlots.find(
+                  s => s.lessonDate === date && s.lessonNumber === num
+                ) ?? null;
+                setSelectedSlot(slot);
+              }}
+              placeholder="Выберите пару"
+            >
+              <Select.Trigger>
+                <Select.Value />
+                <Select.Indicator />
+              </Select.Trigger>
+              <Select.Popover>
+                <ListBox>
+                  {Array.from(slotsByDate.entries()).map(([date, slots]) => (
+                    <ListBox.Section key={date}>
+                      <Header>{formatDateDisplay(date)}</Header>
+                      {slots.map(slot => {
+                        const time = LESSON_TIMES[slot.lessonNumber];
+                        const key = `${slot.lessonDate}-lesson-${slot.lessonNumber}`;
+                        return (
+                          <ListBox.Item key={key} id={key} textValue={`${slot.lessonNumber} пара ${time.start} – ${time.end}`}>
+                            <Label>{slot.lessonNumber} пара</Label>
+                            <Description>{time.start} – {time.end}</Description>
+                            <ListBox.ItemIndicator />
+                          </ListBox.Item>
+                        );
+                      })}
+                    </ListBox.Section>
+                  ))}
+                </ListBox>
+              </Select.Popover>
+            </Select>
           )}
-        </Field>
+        </div>
       )}
 
-      <SubmitButton
-        onSubmit={handleSubmit}
-        disabled={!isValid || isSubmitting}
-        isSubmitting={isSubmitting}
-      />
+      <Button
+        variant="primary"
+        className="w-full"
+        onPress={handleSubmit}
+        isDisabled={!isValid || isSubmitting}
+      >
+        {isSubmitting ? "Сохранение..." : "Создать задачу"}
+      </Button>
     </div>
   );
 };
-
-// ─── Кнопка сабмита ────────────────────────────────────────────────────────
-
-interface SubmitButtonProps {
-  onSubmit: () => void;
-  disabled: boolean;
-  isSubmitting: boolean;
-}
-
-const SubmitButton = ({ onSubmit, disabled, isSubmitting }: SubmitButtonProps) => (
-  <button
-    onClick={onSubmit}
-    disabled={disabled}
-    className={`
-      w-full py-4 rounded-2xl
-      text-[15px] font-semibold text-white
-      bg-black active:bg-gray-800
-      active:scale-[0.98] transition-all duration-150
-      disabled:opacity-40 disabled:pointer-events-none
-      mt-2
-    `}
-  >
-    {isSubmitting ? "Сохранение..." : "Создать задачу"}
-  </button>
-);
 
 // ─── Страница ──────────────────────────────────────────────────────────────
 
 export default function NewTaskPage() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<TabType>("Кастомная");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isPending, startTransition] = useTransition();
 
@@ -346,53 +292,73 @@ export default function NewTaskPage() {
     startTransition(() => router.back());
   }, [router]);
 
-  const handleSubmit = useCallback(
-    async (task: CustomTask | ScheduleTask) => {
-      setIsSubmitting(true);
-      try {
-        await asyncStore.addTask(task);
-        startTransition(() => router.back());
-      } finally {
-        setIsSubmitting(false);
-      }
-    },
-    [router]
-  );
+  const handleSubmit = useCallback(async (task: CustomTask | ScheduleTask) => {
+    setIsSubmitting(true);
+    try {
+      await asyncStore.addTask(task);
+      startTransition(() => router.back());
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [router]);
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50">
+    <div className="flex flex-col min-h-screen">
 
-      {/* Шапка */}
-      <div className="flex items-center justify-between px-4 pt-6 pb-4">
-        <button
-          onClick={handleBack}
-          className="w-9 h-9 rounded-2xl bg-white flex items-center justify-center active:scale-95 transition-transform shadow-sm"
+      {/* Шапка — как у семестра */}
+      <Button
+        variant="tertiary"
+        className="fixed z-10"
+        onPress={handleBack}
+      >
+        <IconChevronLeft className="size-4" />
+        Назад
+      </Button>
+
+      <h1 className="text-2xl font-medium text-center mt-12 mb-4">
+        Новая задача
+      </h1>
+
+      <div className="flex flex-col gap-4 pb-10">
+
+        {/* Tabs вместо самописного TabSwitcher */}
+        <Tabs
+          onSelectionChange={tab => {
+            // сбрасываем форму при смене вкладки через key на формах
+          }}
+          className="w-full"
         >
-          <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-            <path d="M11 4L6 9L11 14" stroke="#111827" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </button>
-        <h1 className="text-[17px] font-bold text-black">Новая задача</h1>
-        <div className="w-9" />
-      </div>
+          <Tabs.ListContainer>
+            <Tabs.List>
+              <Tabs.Tab id="Кастомная">
+                Кастомная
+                <Tabs.Indicator />
+              </Tabs.Tab>
+              <Tabs.Tab id="По расписанию">
+                По расписанию
+                <Tabs.Indicator />
+              </Tabs.Tab>
+            </Tabs.List>
+          </Tabs.ListContainer>
 
-      <div className="flex-1 px-4 pb-10 flex flex-col gap-4">
+          <Tabs.Panel id="Кастомная" className="p-0">
+            <div className="pt-4">
+              <CustomForm
+                onSubmit={handleSubmit}
+                isSubmitting={isSubmitting}
+              />
+            </div>
+          </Tabs.Panel>
 
-        {/* Переключатель типа */}
-        <TabSwitcher active={activeTab} onChange={setActiveTab} />
-
-        {/* Форма */}
-        {activeTab === "Кастомная" ? (
-          <CustomForm
-            onSubmit={handleSubmit}
-            isSubmitting={isSubmitting}
-          />
-        ) : (
-          <ScheduleForm
-            onSubmit={handleSubmit}
-            isSubmitting={isSubmitting}
-          />
-        )}
+          <Tabs.Panel id="По расписанию"className="p-0">
+            <div className="pt-4">
+              <ScheduleForm
+                onSubmit={handleSubmit}
+                isSubmitting={isSubmitting}
+              />
+            </div>
+          </Tabs.Panel>
+        </Tabs>
 
       </div>
     </div>
