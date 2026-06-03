@@ -10,6 +10,7 @@ import { computeTask } from "@/lib/scheduleUtils";
 import { ComputedTask, LESSON_TIMES } from "@/types";
 import { formatDeadline, formatDateDisplay } from "@/lib/scheduleUtils";
 import { Button, Chip, IconChevronLeft } from "@heroui/react";
+import { Calendar, Clock } from "@gravity-ui/icons";
 
 const InfoRow = ({ icon, label, value, bg }: {
   icon: React.ReactNode; label: string; value: string; bg: string;
@@ -154,12 +155,7 @@ export default function ArchiveTaskPage() {
         {/* Инфо */}
         <div className="bg-white rounded-3xl px-4 py-1">
           <InfoRow
-            icon={
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <circle cx="8" cy="8" r="6.5" stroke="#9CA3AF" strokeWidth="1.25"/>
-                <path d="M8 5V8.5L10 10" stroke="#9CA3AF" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            }
+            icon={<Clock className="text-gray-700 " />}
             label="Дедлайн"
             value={formatDeadline(task.deadline)}
             bg="bg-gray-100"
@@ -185,13 +181,7 @@ export default function ArchiveTaskPage() {
 
           {task.type === "По расписанию" && subjectName && (
             <InfoRow
-              icon={
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                  <rect x="2" y="3" width="12" height="11" rx="2" stroke="#9CA3AF" strokeWidth="1.25"/>
-                  <path d="M5 2V4M11 2V4" stroke="#9CA3AF" strokeWidth="1.25" strokeLinecap="round"/>
-                  <path d="M2 6.5H14" stroke="#9CA3AF" strokeWidth="1.25"/>
-                </svg>
-              }
+              icon={<Calendar className="text-gray-700 " />}
               label="Предмет"
               value={subjectName}
               bg="bg-gray-100"
@@ -200,12 +190,7 @@ export default function ArchiveTaskPage() {
 
           {task.type === "По расписанию" && lessonTime && (
             <InfoRow
-              icon={
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                  <rect x="2" y="4" width="12" height="9" rx="2" stroke="#9CA3AF" strokeWidth="1.25"/>
-                  <path d="M5 2V5M11 2V5" stroke="#9CA3AF" strokeWidth="1.25" strokeLinecap="round"/>
-                </svg>
-              }
+              icon={<Calendar className="text-gray-700 " />}
               label="Пара"
               value={lessonTime}
               bg="bg-gray-100"
@@ -213,12 +198,7 @@ export default function ArchiveTaskPage() {
           )}
 
           <InfoRow
-            icon={
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <path d="M8 2L9.8 6.2L14 6.9L11 9.8L11.7 14L8 11.9L4.3 14L5 9.8L2 6.9L6.2 6.2L8 2Z"
-                  stroke="#9CA3AF" strokeWidth="1.25" strokeLinejoin="round"/>
-              </svg>
-            }
+            icon={<Clock className="text-gray-700 " />}
             label="Создана"
             value={formatDateDisplay(task.createdAt)}
             bg="bg-gray-100"

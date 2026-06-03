@@ -8,6 +8,7 @@ import { useAsyncStore } from "@/hooks/useAsyncStore";
 import { useWeekInfo } from "@/hooks/useSchedule";
 import { asyncStore } from "@/lib/asyncStore";
 import { Button, Chip } from "@heroui/react";
+import { ArrowDownToSquare, ArrowUpFromSquare, ChevronRight } from "@gravity-ui/icons";
 
 // ─── Секция ────────────────────────────────────────────────────────────────
 
@@ -52,9 +53,7 @@ const SettingsRow = memo(({ label, sub, onClick, right, destructive }: SettingsR
     </div>
     {right ?? (
       onClick && (
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-          <path d="M6 4L10 8L6 12" stroke="#D1D5DB" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
+        <ChevronRight className="text-gray-300 size-4" />
       )
     )}
   </button>
@@ -216,10 +215,7 @@ export default function SettingsPage() {
             sub="Скачать резервную копию JSON"
             onClick={handleExport}
             right={
-              <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                <path d="M9 3V12M9 12L5.5 8.5M9 12L12.5 8.5" stroke="#9CA3AF" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
-                <path d="M3 14H15" stroke="#9CA3AF" strokeWidth="1.75" strokeLinecap="round" />
-              </svg>
+              <ArrowUpFromSquare className="size-5 text-gray-300" />
             }
           />
           <SettingsRow
@@ -231,10 +227,7 @@ export default function SettingsPage() {
             }
             onClick={handleImport}
             right={
-              <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                <path d="M9 15V6M9 6L5.5 9.5M9 6L12.5 9.5" stroke="#9CA3AF" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
-                <path d="M3 4H15" stroke="#9CA3AF" strokeWidth="1.75" strokeLinecap="round" />
-              </svg>
+              <ArrowDownToSquare className="size-5 text-gray-300" />
             }
           />
           <SettingsRow

@@ -8,6 +8,7 @@ import { useAsyncStore } from "@/hooks/useAsyncStore";
 import { asyncStore } from "@/lib/asyncStore";
 import { formatDateToISO } from "@/lib/scheduleUtils";
 import { Button, Chip, IconChevronLeft } from "@heroui/react";
+import { ArrowRight } from "@gravity-ui/icons";
 
 // ─── Константы ─────────────────────────────────────────────────────────────
 
@@ -136,10 +137,7 @@ const SemesterPreview = ({ startDate, weeks }: SemesterPreviewProps) => {
           </span>
         </div>
 
-        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-          <path d="M4 10H16M16 10L11 5M16 10L11 15"
-            stroke="#D1D5DB" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
+        <ArrowRight className="text-gray-300 size-5" />
 
         <div className="flex flex-col flex-1 items-end">
           <span className="text-[11px] text-gray-400">Конец</span>

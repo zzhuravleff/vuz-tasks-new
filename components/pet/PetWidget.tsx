@@ -13,10 +13,10 @@ import { Chip, InfoIcon, ProgressBar } from "@heroui/react";
 const STATE_COLORS: Record<PetState, {
   bg: string; color: "success" | "accent" | "warning" | "danger"; border: string; text: string;
 }> = {
-  happy:   { bg: "#F2FBEA", color: "success", border: "border-success", text: "text-success" },
-  neutral: { bg: "#E6F1FB", color: "accent", border: "border-accent", text: "text-accent" },
-  sad:     { bg: "#FAEEDA", color: "warning", border: "border-warning", text: "text-warning" },
-  sick:    { bg: "#FCEBEB", color: "danger", border: "border-danger", text: "text-danger" },
+  happy:   { bg: "#F2FBEA", color: "success", border: "border-success/16", text: "text-success" },
+  neutral: { bg: "#E6F1FB", color: "accent", border: "border-accent/16", text: "text-accent" },
+  sad:     { bg: "#FAEEDA", color: "warning", border: "border-warning/16", text: "text-warning" },
+  sick:    { bg: "#FCEBEB", color: "danger", border: "border-danger/16", text: "text-danger" },
 };
 
 
