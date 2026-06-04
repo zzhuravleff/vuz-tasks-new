@@ -5,6 +5,7 @@ import type { Metadata, Viewport } from "next";
 import { BottomNav } from "@/components/ui/BottomNav";
 import { ServiceWorkerRegistrar } from "@/components/ui/ServiceWorkerRegistrar";
 import "./globals.css";
+import { PWAProvider } from "next-pwa-pack";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -41,11 +42,13 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/icons/icon-192.png" />
         <meta name="mobile-web-app-capable" content="yes" />
       </head>
+      <PWAProvider>
       <body className="bg-[#f5f5f5] antialiased">
         <main className="w-full p-4">{children}</main>
         <BottomNav />
-        <ServiceWorkerRegistrar />
+        {/* <ServiceWorkerRegistrar /> */}
       </body>
+      </PWAProvider>
     </html>
   );
 }

@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Нет соединения</title>
+    <style>
+      body {
+        background: #F9FAFB;
+        color: #000;
+        font-family: sans-serif;
+        text-align: center;
+        padding: 40px;
+      }
+      .btn {
+        margin-top: 20px;
+        padding: 10px 20px;
+        font-size: 18px;
+        border-radius: full;
+        background-color: #0485f7;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Нет интернет соединения</h1>
+    <p>Пожалуйста подключитесь к интернету и перезагрузите страницу</p>
+    <button class="btn" onclick="location.reload()">Перезагрузить</button>
+    <script>
+      // If connection is restored, reload automatically
+      window.addEventListener("online", () => location.reload());
+    </script>
+  </body>
+</html>

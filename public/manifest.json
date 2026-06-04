@@ -3,22 +3,36 @@
   "short_name": "ВУЗадачи",
   "description": "Отслеживайте свои учебные задачи эффективно",
   "start_url": "/",
+  "id": "/",
+  "lang": "ru",
   "display": "standalone",
   "background_color": "#F9FAFB",
-  "theme_color": "#ffffff",
+  "theme_color": "#FFFFFF",
   "orientation": "portrait",
   "icons": [
     {
-      "src": "/icons/icon-192.png",
+      "src": "/icons/icon-16x16.png",
+      "sizes": "16x16",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-32x32.png",
+      "sizes": "32x32",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-192x192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/icons/icon-512.png",
+      "src": "/icons/icon-512x512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
     }
-  ]
+  ],
+  "scope": "/",
+  "prefer_related_applications": false
 }
